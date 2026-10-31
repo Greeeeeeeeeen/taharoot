@@ -90,13 +90,83 @@ const CONTENT = {
   ],
 
   // Photos go in assets/witnesses/, statement videos in assets/video/.
-  // "role" is optional.
+  // "role" is optional. "desk" is the desk analysis findings.
   witnesses: [
-    { name: 'איתן "בחור טוב" ברוס', photo: "assets/witnesses/witness1.jpg", video: "assets/video/witness1.mp4" },
-    { name: 'עידו "הקצין" רווה', photo: "assets/witnesses/witness2.jpg", video: "assets/video/witness2.mp4" },
-    { name: 'רן "המלאך" מזרחי', photo: "assets/witnesses/witness3.jpg", video: "assets/video/witness3.mp4" },
-    { name: 'איתן "החננה" אנגרט', photo: "assets/witnesses/witness4.jpg", video: "assets/video/witness4.mp4" },
-    { name: 'אופיר "המלכה" אהרון כהן', photo: "assets/witnesses/witness5.jpg", video: "assets/video/witness5.mp4" },
+    {
+      name: 'איתן "בחור טוב" ברוס',
+      photo: "assets/witnesses/witness1.jpg",
+      video: "assets/video/witness1.mp4",
+      desk: [
+        'רישום פלילי: חשוד ברצח של הנמלה המפורסמת "מלכישוע", אך התיק נסגר עקב חוסר ראיות.',
+        "עבר מפואר במשפחת הפשע של אפי הנמר.",
+        "אוהב לאכול דייסה על דבש וגויאבות.",
+      ],
+    },
+    {
+      name: 'עידו "הקצין" רווה',
+      photo: "assets/witnesses/witness2.jpg",
+      video: "assets/video/witness2.mp4",
+      desk: [
+        "בעל דוקטורט בהיסטוריה של עצי הברוש של ארץ כנען העתיקה.",
+        "שותה קפה עם חמש כפיות מלח.",
+        "לא רצה להיות קצין, אבל אמא הכריחה אותו להיות אלוף.",
+      ],
+    },
+    {
+      name: 'רן "המלאך" מזרחי',
+      photo: "assets/witnesses/witness3.jpg",
+      video: "assets/video/witness3.mp4",
+      desk: [
+        "תרם את כל הכסף שלו לעניים.",
+        "בעל בית תמחוי מצליח.",
+        "בן אדם זהב. פשוט מלאך.",
+      ],
+    },
+    {
+      name: 'איתן "החננה" אנגרט',
+      photo: "assets/witnesses/witness4.jpg",
+      video: "assets/video/witness4.mp4",
+      desk: [
+        'סיים 5 יח"ל מתמטיקה בפעוטון.',
+        "נולד ברוסיה, יודע שמונה שפות.",
+        "זכה במקום שני בתחרות קוביה הונגרית באירופה.",
+      ],
+    },
+    {
+      name: 'אופיר "המלכה" אהרון כהן',
+      photo: "assets/witnesses/witness5.jpg",
+      video: "assets/video/witness5.mp4",
+      desk: [
+        "נצר לכתר המלוכה הבריטי.",
+        "יש לה שומר ראש בשם ג'ורג'.",
+        "לא שורדת שעה בלי תה נענע וקמומיל.",
+      ],
+    },
+  ],
+
+  tabDesk: "דסק",
+  deskIntro: "בחרו עד כדי להעביר אותו לניתוח דסק",
+  deskHeader: "ניתוח דסק // מסווג",
+  deskVideo: "assets/video/desk.mp4",
+  deskTeam: "הדסקאים האלופים דביר, ליהי והודיה על המקרה",
+  deskDurationMs: 5500,
+  deskProgressLabel: "מנתח נתונים... {p}%",
+  deskResultLabel: "ממצאי ניתוח דסק",
+  deskBackButton: "חזרה לרשימת העדים",
+  deskDoneLabel: "נותח",
+  // {name} is replaced with the witness name.
+  deskLog: [
+    "> מתחבר למאגר המודיעין המרכזי...",
+    "> דביר: SELECT * FROM suspects WHERE name='{name}'",
+    "> ליהי: מצליבה נתונים עם מאגר הנמלים הלאומי...",
+    "> הודיה: עוקפת חומת אש [##########] OK",
+    "> מוריד 400GB של מידע על {name}...",
+    "> סורק את האינסטגרם של סבתא שלו...",
+    "> ERROR 418: אני קומקום. מנסה שוב...",
+    "> דביר: מישהו שתה לי את הקפה?!",
+    "> מפענח הצפנה: 0x4D 0x50 0x43 0x49 0x44...",
+    "> ליהי: מצאתי משהו!!",
+    "> מכין דו\"ח סופי... [OK]",
   ],
 
   tabCaseFile: "תיק",

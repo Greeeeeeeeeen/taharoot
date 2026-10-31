@@ -70,6 +70,7 @@
             <span id="evidence-badge" class="tab-badge hidden"></span>
           </button>
           <button class="tab" data-tab="casefile" data-text="tabCaseFile"></button>
+          <button class="tab" data-tab="desk" data-text="tabDesk"></button>
         </nav>
 
         <div class="case-body tab-panel active" id="panel-witnesses">
@@ -107,6 +108,11 @@
           <button id="btn-share-file" class="btn btn-primary" data-text="shareCaseFileButton"></button>
           <div id="share-feedback" class="share-feedback"></div>
         </div>
+
+        <div class="case-body tab-panel" id="panel-desk">
+          <p class="panel-intro" data-text="deskIntro"></p>
+          <div id="desk-list" class="desk-list"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -125,6 +131,41 @@
       </div>
       <img id="viewer-image" class="viewer-image hidden" alt="">
       <p id="viewer-text" class="viewer-text hidden"></p>
+    </div>
+  </div>
+
+  <!-- Desk analysis sequence -->
+  <div id="desk-overlay" class="desk-overlay hidden" role="dialog" aria-modal="true">
+    <div class="desk-header">
+      <span class="rec-dot"></span>
+      <span data-text="deskHeader"></span>
+      <button id="btn-close-desk" class="btn-close" aria-label="סגור">✕</button>
+    </div>
+
+    <div id="desk-stage-video" class="desk-stage">
+      <div class="video-wrap">
+        <video id="desk-video" playsinline webkit-playsinline preload="metadata"></video>
+      </div>
+      <button id="btn-desk-skip" class="btn btn-ghost" data-text="skipButton"></button>
+    </div>
+
+    <div id="desk-stage-process" class="desk-stage hidden">
+      <div class="desk-team" data-text="deskTeam"></div>
+      <div id="desk-log" class="desk-log"></div>
+      <div class="desk-progress"><div id="desk-progress-bar" class="desk-progress-bar"></div></div>
+      <div id="desk-progress-label" class="desk-progress-label"></div>
+    </div>
+
+    <div id="desk-stage-result" class="desk-stage hidden">
+      <div class="desk-profile">
+        <div id="desk-photo" class="witness-photo desk-photo"></div>
+        <div>
+          <div class="desk-result-label" data-text="deskResultLabel"></div>
+          <div id="desk-name" class="desk-name"></div>
+        </div>
+      </div>
+      <div id="desk-findings" class="terminal-body desk-findings"></div>
+      <button id="btn-desk-back" class="btn btn-primary hidden" data-text="deskBackButton"></button>
     </div>
   </div>
 

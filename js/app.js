@@ -415,4 +415,161 @@
       $("share-feedback").textContent = CONTENT.copiedFeedback;
     } catch (e) {}
   });
+
+  /* ---------- Desk analysis ---------- */
+  const deskOverlay = $("desk-overlay");
+  const deskVideo = $("desk-video");
+  let deskRun = 0;
+  let deskTimers = [];
+  let deskTyper = null;
+  let deskWitness = null;
+
+  function fillPhoto(container, witness) {
+    container.textContent = "";
+    container.classList.remove("no-photo");
+    const img = document.createElement("img");
+    img.alt = witness.name;
+    img.src = witness.photo;
+    img.addEventListener("error", () => {
+      img.remove();
+      container.classList.add("no-photo");
+    });
+    container.appendChild(img);
+  }
+
+  const deskDoneTags = CONTENT.witnesses.map((witness) => {
+    const item = document.createElement("button");
+    item.className = "desk-item";
+
+    const photo = document.createElement("div");
+    photo.className = "witness-photo desk-thumb";
+    fillPhoto(photo, witness);
+
+    const name = document.createElement("span");
+    name.className = "desk-item-name";
+    name.textContent = witness.name;
+
+    const done = document.createElement("span");
+    done.className = "desk-done hidden";
+    done.textContent = CONTENT.deskDoneLabel;
+
+    item.append(photo, name, done);
+    item.addEventListener("click", () => openDesk(witness));
+    $("desk-list").appendChild(item);
+    return done;
+  });
+
+  function deskLater(fn, ms) {
+    deskTimers.push(setTimeout(fn, ms));
+  }
+
+  function showDeskStage(name) {
+    ["video", "process", "result"].forEach((s) => {
+      $("desk-stage-" + s).classList.toggle("hidden", s !== name);
+    });
+  }
+
+  function stopDeskVideo() {
+    deskVideo.pause();
+    deskVideo.removeAttribute("src");
+    deskVideo.load();
+  }
+
+  function openDesk(witness) {
+    deskRun++;
+    deskWitness = witness;
+    deskOverlay.classList.remove("hidden");
+
+    if (!CONTENT.deskVideo) {
+      runDeskProcess(deskRun);
+      return;
+    }
+    showDeskStage("video");
+    deskVideo.src = CONTENT.deskVideo;
+    const attempt = deskVideo.play();
+    if (attempt && attempt.catch) attempt.catch(() => {});
+  }
+
+  function deskVideoDone() {
+    if (deskOverlay.classList.contains("hidden")) return;
+    if ($("desk-stage-video").classList.contains("hidden")) return;
+    stopDeskVideo();
+    runDeskProcess(deskRun);
+  }
+
+  deskVideo.addEventListener("ended", deskVideoDone);
+  deskVideo.addEventListener("error", () => {
+    if (deskVideo.getAttribute("src")) deskVideoDone();
+  });
+  $("btn-desk-skip").addEventListener("click", deskVideoDone);
+
+  function runDeskProcess(run) {
+    showDeskStage("process");
+    const log = $("desk-log");
+    const bar = $("desk-progress-bar");
+    const label = $("desk-progress-label");
+    log.textContent = "";
+    bar.style.width = "0%";
+
+    const lines = CONTENT.deskLog.map((l) => l.split("{name}").join(deskWitness.name));
+    const duration = CONTENT.deskDurationMs;
+    const lineGap = duration / (lines.length + 1);
+
+    lines.forEach((line, i) => {
+      deskLater(() => {
+        if (run !== deskRun) return;
+        const row = document.createElement("div");
+        row.className = "desk-log-line";
+        row.textContent = line;
+        log.appendChild(row);
+        log.scrollTop = log.scrollHeight;
+      }, lineGap * (i + 1));
+    });
+
+    const start = Date.now();
+    (function tick() {
+      if (run !== deskRun) return;
+      const p = Math.min(100, Math.round(((Date.now() - start) / duration) * 100));
+      bar.style.width = p + "%";
+      label.textContent = CONTENT.deskProgressLabel.replace("{p}", p);
+      if (p < 100) deskLater(tick, 80);
+      else deskLater(() => run === deskRun && showDeskResult(), 500);
+    })();
+  }
+
+  function showDeskResult() {
+    const witness = deskWitness;
+    showDeskStage("result");
+    fillPhoto($("desk-photo"), witness);
+    $("desk-name").textContent = witness.name;
+    $("btn-desk-back").classList.add("hidden");
+
+    const text = witness.desk.map((f) => "▸ " + f).join("|\n\n");
+    deskTyper = typewrite($("desk-findings"), text, {
+      charDelay: 35,
+      jitter: 20,
+      punctuationDelay: 200,
+      pauseDelay: 500,
+      onDone: () => {
+        deskDoneTags[CONTENT.witnesses.indexOf(witness)].classList.remove("hidden");
+        reveal($("btn-desk-back"));
+      },
+    });
+  }
+
+  $("desk-findings").addEventListener("click", () => {
+    if (deskTyper && !deskTyper.isDone()) deskTyper.skip();
+  });
+
+  function closeDesk() {
+    deskRun++;
+    deskTimers.forEach(clearTimeout);
+    deskTimers = [];
+    if (deskTyper && !deskTyper.isDone()) deskTyper.skip();
+    stopDeskVideo();
+    deskOverlay.classList.add("hidden");
+  }
+
+  $("btn-close-desk").addEventListener("click", closeDesk);
+  $("btn-desk-back").addEventListener("click", closeDesk);
 })();
