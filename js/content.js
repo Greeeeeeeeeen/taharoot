@@ -264,6 +264,7 @@ const CONTENT = {
   deskHeader: "ניתוח דסק // מסווג",
   deskVideo: "assets/video/desk.mp4",
   deskTeam: "הדסקאים האלופים דביר, ליהי והודיה על המקרה",
+  deskTeamPhoto: "assets/desk.jpg",
   deskDurationMs: 5500,
   deskProgressLabel: "מנתח נתונים... {p}%",
   deskResultLabel: "ממצאי ניתוח דסק",

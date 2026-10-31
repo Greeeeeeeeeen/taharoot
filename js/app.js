@@ -422,6 +422,13 @@
 
   /* ---------- Desk analysis ---------- */
   const deskOverlay = $("desk-overlay");
+  const deskTeamPhoto = $("desk-team-photo");
+  if (CONTENT.deskTeamPhoto) {
+    deskTeamPhoto.src = CONTENT.deskTeamPhoto;
+    deskTeamPhoto.addEventListener("error", () => deskTeamPhoto.classList.add("hidden"));
+  } else {
+    deskTeamPhoto.classList.add("hidden");
+  }
   const deskVideo = $("desk-video");
   let deskRun = 0;
   let deskTimers = [];
