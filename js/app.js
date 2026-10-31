@@ -236,9 +236,13 @@
     }
 
     const question = set.questions[questionIndex];
-    $("question-progress").textContent = CONTENT.questionProgress
-      .replace("{n}", questionIndex + 1)
-      .replace("{total}", set.questions.length);
+    const sets = CONTENT.questionSets;
+    const countBefore = sets.slice(0, setIndex).reduce((sum, s) => sum + s.questions.length, 0);
+    const total = sets.reduce((sum, s) => sum + s.questions.length, 0);
+    $("question-progress").textContent =
+      CONTENT.questionProgress.replace("{n}", countBefore + questionIndex + 1).replace("{total}", total) +
+      " // " +
+      CONTENT.questionReward.replace("{title}", set.evidence.title);
     $("question-text").textContent = question.text;
 
     const buttons = question.options.map((option, i) => {
