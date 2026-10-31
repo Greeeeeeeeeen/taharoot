@@ -55,33 +55,57 @@
       </div>
     </section>
 
-    <!-- Case: witnesses -->
+    <!-- Case: witnesses / questions / evidence -->
     <section id="screen-case" class="screen">
       <div class="terminal">
         <div class="terminal-header">
           <span class="rec-dot"></span>
           <span data-text="caseHeader"></span>
         </div>
-        <div class="case-body">
-          <p class="witnesses-intro" data-text="witnessesIntro"></p>
+        <nav class="tabs">
+          <button class="tab active" data-tab="witnesses" data-text="tabWitnesses"></button>
+          <button class="tab" data-tab="questions" data-text="tabQuestions"></button>
+          <button class="tab" data-tab="evidence">
+            <span data-text="tabEvidence"></span>
+            <span id="evidence-badge" class="tab-badge hidden"></span>
+          </button>
+        </nav>
+
+        <div class="case-body tab-panel active" id="panel-witnesses">
+          <p class="panel-intro" data-text="witnessesIntro"></p>
           <div id="witness-grid" class="witness-grid"></div>
+        </div>
+
+        <div class="case-body tab-panel" id="panel-questions">
+          <div id="question-progress" class="question-progress"></div>
+          <h2 id="question-text" class="question-text"></h2>
+          <div id="question-options" class="question-options"></div>
+          <div id="question-feedback" class="question-feedback"></div>
+          <button id="btn-next-question" class="btn btn-primary hidden"></button>
+        </div>
+
+        <div class="case-body tab-panel" id="panel-evidence">
+          <p class="panel-intro" data-text="evidenceIntro"></p>
+          <div id="evidence-list" class="evidence-list"></div>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Witness statement player -->
-  <div id="statement-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+  <!-- Viewer for statements and evidence -->
+  <div id="viewer" class="overlay hidden" role="dialog" aria-modal="true">
     <div class="overlay-inner">
       <div class="overlay-header">
         <span class="rec-dot"></span>
-        <span id="statement-title"></span>
-        <button id="btn-close-statement" class="btn-close" aria-label="סגור">✕</button>
+        <span id="viewer-title"></span>
+        <button id="btn-close-viewer" class="btn-close" aria-label="סגור">✕</button>
       </div>
-      <div class="video-wrap">
-        <video id="statement-video" playsinline webkit-playsinline controls preload="metadata"></video>
-        <div id="statement-error" class="video-error hidden" data-text="statementMissing"></div>
+      <div id="viewer-video-wrap" class="video-wrap">
+        <video id="viewer-video" playsinline webkit-playsinline controls preload="metadata"></video>
+        <div id="viewer-error" class="video-error hidden" data-text="mediaMissing"></div>
       </div>
+      <img id="viewer-image" class="viewer-image hidden" alt="">
+      <p id="viewer-text" class="viewer-text hidden"></p>
     </div>
   </div>
 
