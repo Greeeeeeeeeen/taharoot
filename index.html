@@ -85,12 +85,13 @@
           <div id="question-options" class="question-options"></div>
           <div id="question-feedback" class="question-feedback"></div>
           <button id="btn-next-question" class="btn btn-primary hidden"></button>
-          <button id="btn-go-submit" class="btn btn-primary hidden" data-text="goToSubmitButton"></button>
+          <button class="btn btn-final btn-to-final hidden" data-text="toFinalButton"></button>
         </div>
 
         <div class="case-body tab-panel" id="panel-evidence">
           <p class="panel-intro" data-text="evidenceIntro"></p>
           <div id="evidence-list" class="evidence-list"></div>
+          <button class="btn btn-final btn-to-final hidden" data-text="toFinalButton"></button>
         </div>
 
         <div class="case-body tab-panel" id="panel-casefile">
@@ -103,8 +104,6 @@
             <input id="suspect-other" class="field hidden" type="text" autocomplete="off">
             <label class="field-label" for="suspect-violations" data-text="suspectViolationsLabel"></label>
             <textarea id="suspect-violations" class="field" rows="4"></textarea>
-            <button id="btn-submit-suspect" class="btn btn-primary submit-suspect" data-text="submitSuspectButton"></button>
-            <div id="submit-note" class="submit-note"></div>
           </div>
 
           <div id="witness-files"></div>
@@ -117,6 +116,39 @@
         <div class="case-body tab-panel" id="panel-desk">
           <p class="panel-intro" data-text="deskIntro"></p>
           <div id="desk-list" class="desk-list"></div>
+        </div>
+      </div>
+    </section>
+    <!-- Final suspect -->
+    <section id="screen-final" class="screen">
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="rec-dot"></span>
+          <span data-text="finalHeader"></span>
+        </div>
+
+        <div id="final-pick" class="case-body">
+          <p class="final-intro" data-text="finalIntro"></p>
+          <div id="final-grid" class="witness-grid final-grid"></div>
+          <button id="btn-final-submit" class="btn btn-final" data-text="finalSubmitButton" disabled></button>
+          <button id="btn-final-back" class="btn btn-ghost final-back" data-text="finalBackButton"></button>
+        </div>
+
+        <div id="final-video-stage" class="case-body final-video-stage hidden">
+          <div class="video-wrap video-portrait">
+            <video id="final-video" playsinline webkit-playsinline preload="metadata"></video>
+            <div id="final-video-error" class="video-error hidden" data-text="mediaMissing"></div>
+          </div>
+          <button id="btn-final-video-skip" class="btn btn-ghost hidden" data-text="skipButton"></button>
+        </div>
+
+        <div id="final-end" class="case-body final-end hidden">
+          <div class="final-stamp" data-text="finalStamp"></div>
+          <div id="final-end-text" class="terminal-body final-end-text"></div>
+          <div id="final-end-actions" class="final-end-actions hidden">
+            <button id="btn-final-replay" class="btn btn-ghost" data-text="finalReplayButton"></button>
+            <button id="btn-final-to-case" class="btn btn-primary" data-text="finalToCaseButton"></button>
+          </div>
         </div>
       </div>
     </section>

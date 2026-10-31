@@ -330,6 +330,7 @@
       feedback.textContent = CONTENT.correctFeedback + " " + CONTENT.evidenceUnlocked;
       setIndex++;
       questionIndex = 0;
+      updateFinalButtons();
       nextBtn.textContent = CONTENT.viewEvidenceButton;
       nextBtn.onclick = () => {
         renderQuestion();
@@ -617,6 +618,118 @@
 
   $("btn-close-desk").addEventListener("click", closeDesk);
   $("btn-desk-back").addEventListener("click", closeDesk);
+
+  /* ---------- Final suspect ---------- */
+  const finalVideo = $("final-video");
+  let finalChoice = null;
+  let finalSkipTimer = null;
+
+  function updateFinalButtons() {
+    const ready = setIndex >= CONTENT.questionSets.length;
+    document.querySelectorAll(".btn-to-final").forEach((b) => b.classList.toggle("hidden", !ready));
+  }
+
+  function showFinalStage(name) {
+    $("final-pick").classList.toggle("hidden", name !== "pick");
+    $("final-video-stage").classList.toggle("hidden", name !== "video");
+    $("final-end").classList.toggle("hidden", name !== "end");
+  }
+
+  const finalCards = CONTENT.witnesses.map((witness, index) => {
+    const card = document.createElement("button");
+    card.className = "witness-card final-card";
+    const photo = document.createElement("div");
+    photo.className = "witness-photo";
+    fillPhoto(photo, witness);
+    const name = document.createElement("span");
+    name.className = "witness-name";
+    name.textContent = witness.name;
+    card.append(photo, name);
+    card.addEventListener("click", () => selectFinal(index));
+    $("final-grid").appendChild(card);
+    return card;
+  });
+
+  function selectFinal(index) {
+    finalChoice = index;
+    finalCards.forEach((c, i) => c.classList.toggle("selected", i === index));
+    $("btn-final-submit").disabled = false;
+  }
+
+  function openFinal() {
+    showScreen("final");
+    if (progress.finalSuspect !== undefined) {
+      showFinalEnd(true);
+      return;
+    }
+    showFinalStage("pick");
+    const preset = CONTENT.witnesses.findIndex((w) => w.name === caseFile.suspect);
+    if (preset >= 0 && finalChoice === null) selectFinal(preset);
+  }
+
+  document.querySelectorAll(".btn-to-final").forEach((b) => b.addEventListener("click", openFinal));
+  $("btn-final-back").addEventListener("click", () => showScreen("case"));
+
+  $("btn-final-submit").addEventListener("click", () => {
+    if (finalChoice === null) return;
+    const name = CONTENT.witnesses[finalChoice].name;
+    if (!confirm(CONTENT.finalConfirm.replace("{name}", name))) return;
+    progress.finalSuspect = finalChoice;
+    saveProgress();
+    playFinalVideo();
+  });
+
+  function playFinalVideo() {
+    showFinalStage("video");
+    $("final-video-error").classList.add("hidden");
+    $("btn-final-video-skip").classList.add("hidden");
+    finalVideo.src = CONTENT.finalVideo;
+    const attempt = finalVideo.play();
+    if (attempt && attempt.catch) {
+      attempt.catch(() => {
+        if (!finalVideo.error) finalVideo.controls = true;
+      });
+    }
+    clearTimeout(finalSkipTimer);
+    finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), SKIP_DELAY_MS);
+  }
+
+  function finalVideoDone() {
+    if ($("final-video-stage").classList.contains("hidden")) return;
+    clearTimeout(finalSkipTimer);
+    finalVideo.pause();
+    showFinalEnd(false);
+  }
+
+  finalVideo.addEventListener("ended", finalVideoDone);
+  finalVideo.addEventListener("error", () => {
+    if (!finalVideo.getAttribute("src")) return;
+    $("final-video-error").classList.remove("hidden");
+    reveal($("btn-final-video-skip"));
+  });
+  $("btn-final-video-skip").addEventListener("click", finalVideoDone);
+
+  function showFinalEnd(instant) {
+    showFinalStage("end");
+    $("final-end-actions").classList.add("hidden");
+    const name = CONTENT.witnesses[progress.finalSuspect].name;
+    const correct = progress.finalSuspect === CONTENT.criminalIndex;
+    const stamp = document.querySelector(".final-stamp");
+    stamp.textContent = correct ? CONTENT.finalStamp : CONTENT.finalStampWrong;
+    stamp.classList.toggle("wrong", !correct);
+    const text = (correct ? CONTENT.finalEndText : CONTENT.finalEndTextWrong)
+      .replace("{name}", name)
+      .replace("{criminal}", CONTENT.witnesses[CONTENT.criminalIndex].name);
+    const typer = typewrite($("final-end-text"), text, {
+      onDone: () => reveal($("final-end-actions")),
+    });
+    if (instant) typer.skip();
+  }
+
+  $("btn-final-replay").addEventListener("click", playFinalVideo);
+  $("btn-final-to-case").addEventListener("click", () => showScreen("case"));
+
+  updateFinalButtons();
 
   /* ---------- New case ---------- */
   $("btn-new-case").addEventListener("click", () => {

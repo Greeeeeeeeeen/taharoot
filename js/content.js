@@ -262,6 +262,22 @@ const CONTENT = {
     },
   ],
 
+  toFinalButton: "כל הראיות בידיכם - לחשוד הסופי",
+  finalHeader: "החשוד הסופי // הכרעה",
+  finalIntro: "אספתם את כל הראיות. הגיע הזמן להכריע: מי ביצע את העבירה?",
+  finalSubmitButton: "הגישו את התיק",
+  finalBackButton: "חזרה לתיק",
+  finalConfirm: "להגיש את התיק עם החשוד: {name}? לא ניתן לשנות אחרי ההגשה.",
+  finalVideo: "assets/video/criminal.mp4",
+  // Index in "witnesses" of the real criminal (0 = the first witness).
+  criminalIndex: 0,
+  finalStamp: "התיק נסגר",
+  finalStampWrong: "טעות בזיהוי",
+  finalEndText: "החשוד שהגשתם: {name}.|\n\nזיהוי מדויק! העבריין נתפס והתיק הועבר לפרקליטות.||\n\nעבודה מצוינת, חוקרים.",
+  finalEndTextWrong: "החשוד שהגשתם: {name}.|\n\nאבל העבריין האמיתי הוא {criminal}.||\n\nהפעם הוא כמעט חמק לכם. חזרו על הראיות ותלמדו לפעם הבאה.",
+  finalReplayButton: "צפייה חוזרת בסרטון",
+  finalToCaseButton: "חזרה לתיק",
+
   tabDesk: "דסק",
   deskIntro: "בחרו עד כדי להעביר אותו לניתוח דסק",
   deskHeader: "ניתוח דסק // מסווג",

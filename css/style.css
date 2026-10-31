@@ -802,6 +802,96 @@ select.field {
   font-size: 1.15rem;
 }
 
+/* Final suspect */
+.btn-final {
+  width: 100%;
+  margin-top: 20px;
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #1a0f00;
+  box-shadow: 0 0 18px rgba(255, 182, 72, 0.35);
+}
+
+.btn-final:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+  cursor: default;
+}
+
+.final-intro {
+  margin: 0 0 16px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.witness-card.final-card.selected {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px var(--amber), 0 0 18px rgba(255, 182, 72, 0.4);
+}
+
+.witness-card.final-card.selected .witness-name {
+  color: var(--amber);
+}
+
+.final-back {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.video-wrap.video-portrait {
+  aspect-ratio: 3 / 4;
+  width: min(100%, calc(62dvh * 0.75));
+  height: auto;
+  align-self: center;
+}
+
+.final-stamp.wrong {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.final-video-stage,
+.final-end {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.final-stamp {
+  align-self: center;
+  padding: 8px 22px;
+  border: 3px solid var(--danger);
+  border-radius: 6px;
+  color: var(--danger);
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  transform: rotate(-6deg);
+  animation: stamp 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+@keyframes stamp {
+  from { opacity: 0; transform: rotate(-6deg) scale(2.2); }
+  to { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+
+.final-end-text {
+  flex: 0 1 auto;
+  text-align: center;
+}
+
+.final-end-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.final-end-actions .btn-ghost {
+  width: 100%;
+}
+
 /* Viewer extras */
 .viewer-image {
   display: block;
