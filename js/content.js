@@ -91,10 +91,28 @@ const CONTENT = {
   ],
 
   // Photos go in assets/witnesses/, statement videos in assets/video/.
+  // "role" is optional.
   witnesses: [
-    { name: "עד 1", role: "תפקיד", photo: "assets/witnesses/witness1.jpg", video: "assets/video/witness1.mp4" },
-    { name: "עד 2", role: "תפקיד", photo: "assets/witnesses/witness2.jpg", video: "assets/video/witness2.mp4" },
-    { name: "עד 3", role: "תפקיד", photo: "assets/witnesses/witness3.jpg", video: "assets/video/witness3.mp4" },
-    { name: "עד 4", role: "תפקיד", photo: "assets/witnesses/witness4.jpg", video: "assets/video/witness4.mp4" },
+    { name: 'איתן "בחור טוב" ברוס', photo: "assets/witnesses/witness1.jpg", video: "assets/video/witness1.mp4" },
+    { name: 'עידו "הקצין" רווה', photo: "assets/witnesses/witness2.jpg", video: "assets/video/witness2.mp4" },
+    { name: 'רן "המלאך" מזרחי', photo: "assets/witnesses/witness3.jpg", video: "assets/video/witness3.mp4" },
+    { name: 'איתן "החננה" אנגרט', photo: "assets/witnesses/witness4.jpg", video: "assets/video/witness4.mp4" },
+    { name: 'אופיר "המלכה" אהרון כהן', photo: "assets/witnesses/witness5.jpg", video: "assets/video/witness5.mp4" },
   ],
+
+  tabCaseFile: "תיק",
+  caseFileIntro: "בנו את תיק החקירה. כל מה שתכתבו נשמר אוטומטית.",
+  suspectTitle: "חשוד עיקרי",
+  suspectLabel: "מי החשוד העיקרי?",
+  suspectPlaceholder: "בחרו חשוד...",
+  suspectOtherOption: "אחר",
+  suspectOtherPlaceholder: "שם החשוד",
+  suspectViolationsLabel: "עבירות החשוד",
+  witnessStatementLabel: "תמצית העדות",
+  witnessViolationsLabel: "עבירות שביצע העד",
+  textPlaceholder: "כתבו כאן...",
+  shareCaseFileButton: "שיתוף / העתקת התיק",
+  copiedFeedback: "התיק הועתק. אפשר להדביק ולשלוח.",
+  caseFileExportTitle: "תיק חקירה",
+  noAnswer: "-",
 };

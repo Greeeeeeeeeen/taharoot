@@ -69,6 +69,7 @@
             <span data-text="tabEvidence"></span>
             <span id="evidence-badge" class="tab-badge hidden"></span>
           </button>
+          <button class="tab" data-tab="casefile" data-text="tabCaseFile"></button>
         </nav>
 
         <div class="case-body tab-panel active" id="panel-witnesses">
@@ -87,6 +88,24 @@
         <div class="case-body tab-panel" id="panel-evidence">
           <p class="panel-intro" data-text="evidenceIntro"></p>
           <div id="evidence-list" class="evidence-list"></div>
+        </div>
+
+        <div class="case-body tab-panel" id="panel-casefile">
+          <p class="panel-intro" data-text="caseFileIntro"></p>
+
+          <div class="file-card suspect-card">
+            <h3 class="file-card-title" data-text="suspectTitle"></h3>
+            <label class="field-label" for="suspect-select" data-text="suspectLabel"></label>
+            <select id="suspect-select" class="field"></select>
+            <input id="suspect-other" class="field hidden" type="text" autocomplete="off">
+            <label class="field-label" for="suspect-violations" data-text="suspectViolationsLabel"></label>
+            <textarea id="suspect-violations" class="field" rows="4"></textarea>
+          </div>
+
+          <div id="witness-files"></div>
+
+          <button id="btn-share-file" class="btn btn-primary" data-text="shareCaseFileButton"></button>
+          <div id="share-feedback" class="share-feedback"></div>
         </div>
       </div>
     </section>

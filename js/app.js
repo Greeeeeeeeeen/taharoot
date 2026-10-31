@@ -164,11 +164,13 @@
     name.className = "witness-name";
     name.textContent = witness.name;
 
-    const role = document.createElement("span");
-    role.className = "witness-role";
-    role.textContent = witness.role;
-
-    card.append(photo, name, role);
+    card.append(photo, name);
+    if (witness.role) {
+      const role = document.createElement("span");
+      role.className = "witness-role";
+      role.textContent = witness.role;
+      card.appendChild(role);
+    }
     card.addEventListener("click", () => {
       openViewer({ title: CONTENT.statementTitlePrefix + witness.name, video: witness.video });
       watched.classList.remove("hidden");
@@ -301,4 +303,116 @@
   }
 
   renderQuestion();
+
+  /* ---------- Case file ---------- */
+  const STORAGE_KEY = "taharoot-casefile";
+  const OTHER = "__other__";
+  let caseFile = {};
+  try {
+    caseFile = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch (e) {
+    caseFile = {};
+  }
+
+  function saveCaseFile() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(caseFile));
+    } catch (e) {}
+  }
+
+  function bindField(el, key) {
+    el.value = caseFile[key] || "";
+    el.addEventListener("input", () => {
+      caseFile[key] = el.value;
+      saveCaseFile();
+    });
+  }
+
+  const suspectSelect = $("suspect-select");
+  const suspectOther = $("suspect-other");
+  const suspectOptions = [["", CONTENT.suspectPlaceholder]]
+    .concat(CONTENT.witnesses.map((w) => [w.name, w.name]))
+    .concat([[OTHER, CONTENT.suspectOtherOption]]);
+  suspectOptions.forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    suspectSelect.appendChild(option);
+  });
+
+  suspectOther.placeholder = CONTENT.suspectOtherPlaceholder;
+  bindField(suspectSelect, "suspect");
+  bindField(suspectOther, "suspectOther");
+  const syncSuspectOther = () => suspectOther.classList.toggle("hidden", suspectSelect.value !== OTHER);
+  suspectSelect.addEventListener("change", syncSuspectOther);
+  syncSuspectOther();
+
+  $("suspect-violations").placeholder = CONTENT.textPlaceholder;
+  bindField($("suspect-violations"), "suspectViolations");
+
+  CONTENT.witnesses.forEach((witness, i) => {
+    const card = document.createElement("div");
+    card.className = "file-card";
+
+    const title = document.createElement("h3");
+    title.className = "file-card-title";
+    title.textContent = i + 1 + ". " + witness.name;
+    card.appendChild(title);
+
+    [
+      ["statement", CONTENT.witnessStatementLabel],
+      ["violations", CONTENT.witnessViolationsLabel],
+    ].forEach(([field, labelText]) => {
+      const id = "witness-" + i + "-" + field;
+      const label = document.createElement("label");
+      label.className = "field-label";
+      label.htmlFor = id;
+      label.textContent = labelText;
+      const textarea = document.createElement("textarea");
+      textarea.className = "field";
+      textarea.id = id;
+      textarea.rows = 4;
+      textarea.placeholder = CONTENT.textPlaceholder;
+      bindField(textarea, id);
+      card.append(label, textarea);
+    });
+
+    $("witness-files").appendChild(card);
+  });
+
+  function caseFileAsText() {
+    const blank = (v) => (v && v.trim()) || CONTENT.noAnswer;
+    const suspect = caseFile.suspect === OTHER ? caseFile.suspectOther : caseFile.suspect;
+    const lines = [
+      CONTENT.caseFileExportTitle,
+      "",
+      CONTENT.suspectTitle + ": " + blank(suspect),
+      CONTENT.suspectViolationsLabel + ": " + blank(caseFile.suspectViolations),
+    ];
+    CONTENT.witnesses.forEach((witness, i) => {
+      lines.push(
+        "",
+        i + 1 + ". " + witness.name,
+        CONTENT.witnessStatementLabel + ": " + blank(caseFile["witness-" + i + "-statement"]),
+        CONTENT.witnessViolationsLabel + ": " + blank(caseFile["witness-" + i + "-violations"])
+      );
+    });
+    return lines.join("\n");
+  }
+
+  $("btn-share-file").addEventListener("click", async () => {
+    const text = caseFileAsText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: CONTENT.caseFileExportTitle, text });
+        return;
+      } catch (e) {
+        if (e.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      $("share-feedback").textContent = CONTENT.copiedFeedback;
+    } catch (e) {}
+  });
 })();

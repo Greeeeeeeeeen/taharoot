@@ -329,6 +329,7 @@ body {
   position: relative;
   flex: 1;
   min-height: 52px;
+  padding: 0 4px;
   border: none;
   border-bottom: 3px solid transparent;
   background: transparent;
@@ -508,6 +509,89 @@ body {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--amber);
+}
+
+/* Case file */
+.file-card {
+  margin-bottom: 14px;
+  padding: 14px;
+  background: #07100b;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.suspect-card {
+  border-color: var(--amber);
+}
+
+.suspect-card .file-card-title {
+  color: var(--amber);
+}
+
+.file-card-title {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.field-label {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.field {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.field + .field {
+  margin-top: 8px;
+}
+
+textarea.field {
+  resize: vertical;
+  min-height: 96px;
+}
+
+select.field {
+  min-height: 48px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: 14px 50%, 20px 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-inline-end: 36px;
+}
+
+.field::placeholder {
+  color: var(--text);
+  opacity: 0.35;
+}
+
+.share-feedback {
+  min-height: 1.5em;
+  margin-top: 10px;
+  text-align: center;
+  color: var(--accent);
 }
 
 /* Viewer extras */
