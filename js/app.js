@@ -18,8 +18,39 @@
     btn.classList.add("appear");
   }
 
+  /* ---------- Saved progress ---------- */
+  const PROGRESS_KEY = "taharoot-progress";
+  const CASEFILE_KEY = "taharoot-casefile";
+
+  function loadJSON(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key)) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveJSON(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {}
+  }
+
+  const progress = Object.assign(
+    { reachedCase: false, setIndex: 0, questionIndex: 0, watched: [], deskDone: [] },
+    loadJSON(PROGRESS_KEY)
+  );
+  const saveProgress = () => saveJSON(PROGRESS_KEY, progress);
+
+  function markDone(list, index) {
+    if (!progress[list].includes(index)) progress[list].push(index);
+    saveProgress();
+  }
+
   /* ---------- Start ---------- */
   $("btn-start").addEventListener("click", startVideo);
+  if (progress.reachedCase) $("btn-resume").classList.remove("hidden");
+  $("btn-resume").addEventListener("click", () => showScreen("case"));
 
   /* ---------- Video ---------- */
   const video = $("intro-video");
@@ -77,7 +108,11 @@
     if (typer && !typer.isDone() && !e.target.closest("button")) typer.skip();
   });
 
-  $("btn-briefing-next").addEventListener("click", () => showScreen("case"));
+  $("btn-briefing-next").addEventListener("click", () => {
+    progress.reachedCase = true;
+    saveProgress();
+    showScreen("case");
+  });
 
   /* ---------- Tabs ---------- */
   function showTab(name) {
@@ -140,7 +175,7 @@
   });
 
   /* ---------- Witnesses ---------- */
-  CONTENT.witnesses.forEach((witness) => {
+  CONTENT.witnesses.forEach((witness, index) => {
     const card = document.createElement("button");
     card.className = "witness-card";
 
@@ -156,7 +191,8 @@
     photo.appendChild(img);
 
     const watched = document.createElement("span");
-    watched.className = "witness-watched hidden";
+    watched.className = "witness-watched";
+    watched.classList.toggle("hidden", !progress.watched.includes(index));
     watched.textContent = CONTENT.watchedLabel;
     photo.appendChild(watched);
 
@@ -174,6 +210,7 @@
     card.addEventListener("click", () => {
       openViewer({ title: CONTENT.statementTitlePrefix + witness.name, video: witness.video });
       watched.classList.remove("hidden");
+      markDone("watched", index);
     });
     $("witness-grid").appendChild(card);
   });
@@ -200,11 +237,12 @@
 
   let newEvidenceCount = 0;
 
-  function unlockEvidence(setIndex) {
+  function unlockEvidence(setIndex, silent) {
     const { card, status } = evidenceCards[setIndex];
     card.disabled = false;
     card.classList.remove("locked");
     status.textContent = "";
+    if (silent) return;
     newEvidenceCount++;
     $("evidence-badge").textContent = newEvidenceCount;
     $("evidence-badge").classList.remove("hidden");
@@ -216,8 +254,9 @@
 
   /* ---------- Questions ---------- */
   const LETTERS = ["א", "ב", "ג", "ד", "ה", "ו"];
-  let setIndex = 0;
-  let questionIndex = 0;
+  let setIndex = Math.min(progress.setIndex, CONTENT.questionSets.length);
+  let questionIndex = progress.questionIndex;
+  for (let i = 0; i < setIndex; i++) unlockEvidence(i, true);
 
   function renderQuestion() {
     const feedback = $("question-feedback");
@@ -303,26 +342,18 @@
       nextBtn.textContent = CONTENT.nextQuestionButton;
       nextBtn.onclick = renderQuestion;
     }
+    progress.setIndex = setIndex;
+    progress.questionIndex = questionIndex;
+    saveProgress();
     reveal(nextBtn);
   }
 
   renderQuestion();
 
   /* ---------- Case file ---------- */
-  const STORAGE_KEY = "taharoot-casefile";
   const OTHER = "__other__";
-  let caseFile = {};
-  try {
-    caseFile = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch (e) {
-    caseFile = {};
-  }
-
-  function saveCaseFile() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(caseFile));
-    } catch (e) {}
-  }
+  const caseFile = loadJSON(CASEFILE_KEY);
+  const saveCaseFile = () => saveJSON(CASEFILE_KEY, caseFile);
 
   function bindField(el, key) {
     el.value = caseFile[key] || "";
@@ -448,7 +479,7 @@
     container.appendChild(img);
   }
 
-  const deskDoneTags = CONTENT.witnesses.map((witness) => {
+  const deskDoneTags = CONTENT.witnesses.map((witness, index) => {
     const item = document.createElement("button");
     item.className = "desk-item";
 
@@ -461,7 +492,8 @@
     name.textContent = witness.name;
 
     const done = document.createElement("span");
-    done.className = "desk-done hidden";
+    done.className = "desk-done";
+    done.classList.toggle("hidden", !progress.deskDone.includes(index));
     done.textContent = CONTENT.deskDoneLabel;
 
     item.append(photo, name, done);
@@ -562,7 +594,9 @@
       punctuationDelay: 200,
       pauseDelay: 500,
       onDone: () => {
-        deskDoneTags[CONTENT.witnesses.indexOf(witness)].classList.remove("hidden");
+        const index = CONTENT.witnesses.indexOf(witness);
+        deskDoneTags[index].classList.remove("hidden");
+        markDone("deskDone", index);
         reveal($("btn-desk-back"));
       },
     });
@@ -583,4 +617,14 @@
 
   $("btn-close-desk").addEventListener("click", closeDesk);
   $("btn-desk-back").addEventListener("click", closeDesk);
+
+  /* ---------- New case ---------- */
+  $("btn-new-case").addEventListener("click", () => {
+    if (!confirm(CONTENT.newCaseConfirm)) return;
+    try {
+      localStorage.removeItem(PROGRESS_KEY);
+      localStorage.removeItem(CASEFILE_KEY);
+    } catch (e) {}
+    location.reload();
+  });
 })();

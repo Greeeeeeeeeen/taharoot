@@ -25,6 +25,7 @@
         <h1 class="title" data-text="title"></h1>
         <p class="subtitle" data-text="subtitle"></p>
         <button id="btn-start" class="btn btn-primary" data-text="startButton"></button>
+        <button id="btn-resume" class="btn btn-ghost hidden" data-text="resumeButton"></button>
       </div>
     </section>
 
@@ -84,6 +85,7 @@
           <div id="question-options" class="question-options"></div>
           <div id="question-feedback" class="question-feedback"></div>
           <button id="btn-next-question" class="btn btn-primary hidden"></button>
+          <button id="btn-go-submit" class="btn btn-primary hidden" data-text="goToSubmitButton"></button>
         </div>
 
         <div class="case-body tab-panel" id="panel-evidence">
@@ -101,12 +103,15 @@
             <input id="suspect-other" class="field hidden" type="text" autocomplete="off">
             <label class="field-label" for="suspect-violations" data-text="suspectViolationsLabel"></label>
             <textarea id="suspect-violations" class="field" rows="4"></textarea>
+            <button id="btn-submit-suspect" class="btn btn-primary submit-suspect" data-text="submitSuspectButton"></button>
+            <div id="submit-note" class="submit-note"></div>
           </div>
 
           <div id="witness-files"></div>
 
           <button id="btn-share-file" class="btn btn-primary" data-text="shareCaseFileButton"></button>
           <div id="share-feedback" class="share-feedback"></div>
+          <button id="btn-new-case" class="btn btn-danger" data-text="newCaseButton"></button>
         </div>
 
         <div class="case-body tab-panel" id="panel-desk">

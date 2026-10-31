@@ -7,6 +7,9 @@ const CONTENT = {
   title: "תיק חקירה",
   subtitle: "משטרה צבאית חוקרת",
   startButton: "התחל",
+  resumeButton: "המשך חקירה",
+  newCaseButton: "פתיחת תיק חדש",
+  newCaseConfirm: "פתיחת תיק חדש תמחק את כל ההתקדמות ואת כל מה שנכתב בתיק. להמשיך?",
 
   videoSrc: "assets/video/intro.mp4",
   videoMissing: "הסרטון עדיין לא זמין",

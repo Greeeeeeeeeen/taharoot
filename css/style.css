@@ -136,6 +136,16 @@ body {
   min-height: 48px;
 }
 
+.btn-danger {
+  width: 100%;
+  margin-top: 28px;
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+  font-size: 1rem;
+  min-height: 48px;
+}
+
 .btn.appear {
   animation: appear 0.4s ease both;
 }
