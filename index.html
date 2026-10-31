@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#050a07">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="תיק חקירה">
+  <title>תיק חקירה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <main id="app">
+    <!-- Start -->
+    <section id="screen-start" class="screen active">
+      <div class="start-inner">
+        <div class="badge" data-text="startBadge"></div>
+        <h1 class="title" data-text="title"></h1>
+        <p class="subtitle" data-text="subtitle"></p>
+        <button id="btn-start" class="btn btn-primary" data-text="startButton"></button>
+      </div>
+    </section>
+
+    <!-- Video -->
+    <section id="screen-video" class="screen">
+      <div class="video-wrap">
+        <video id="intro-video" playsinline webkit-playsinline preload="metadata"></video>
+        <div id="video-error" class="video-error hidden" data-text="videoMissing"></div>
+      </div>
+      <div class="video-controls">
+        <button id="btn-skip" class="btn btn-ghost hidden" data-text="skipButton"></button>
+        <button id="btn-continue" class="btn btn-primary hidden" data-text="continueButton"></button>
+      </div>
+    </section>
+
+    <!-- Briefing -->
+    <section id="screen-briefing" class="screen">
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="rec-dot"></span>
+          <span data-text="briefingHeader"></span>
+        </div>
+        <div id="briefing-text" class="terminal-body"></div>
+        <div class="tap-hint" id="tap-hint" data-text="tapToSkip"></div>
+      </div>
+      <div class="screen-footer">
+        <button id="btn-briefing-next" class="btn btn-primary hidden" data-text="briefingNextButton"></button>
+      </div>
+    </section>
+
+    <!-- Case (placeholder for questions) -->
+    <section id="screen-case" class="screen">
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="rec-dot"></span>
+          <span data-text="caseHeader"></span>
+        </div>
+        <div class="terminal-body" data-text="casePlaceholder"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/content.js"></script>
+  <script src="js/typewriter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
