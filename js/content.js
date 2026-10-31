@@ -52,8 +52,7 @@ const CONTENT = {
     {
       evidence: {
         title: "ראיה 2 – נשיאת נשק",
-        image: "assets/evidence/evidence2.jpg",
-        text: "",
+        video: "assets/evidence/evidence1.mp4",
       },
       questions: [
         {
