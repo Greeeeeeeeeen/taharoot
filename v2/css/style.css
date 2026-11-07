@@ -323,6 +323,38 @@ body {
   font-weight: 700;
 }
 
+.preload-box {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(6, 14, 9, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.preload-box.preload-ready {
+  border-color: rgba(57, 255, 122, 0.55);
+  background: rgba(57, 255, 122, 0.07);
+}
+
+.preload-label {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--amber);
+  text-align: center;
+}
+
+.preload-box.preload-ready .preload-label {
+  color: var(--accent);
+}
+
+.preload-track {
+  height: 9px;
+}
+
 /* Clearance Scanner Overlay */
 .scan-overlay {
   z-index: 55;
@@ -436,6 +468,64 @@ body {
   height: 100%;
   object-fit: contain;
   background: #000;
+}
+
+.video-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #08150d 0%, #030705 80%);
+}
+
+.video-loader-title {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.96rem;
+  color: var(--amber);
+}
+
+.video-loader-track {
+  width: min(100%, 320px);
+  height: 14px;
+}
+
+.video-loader-meta {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent);
+  direction: ltr;
+}
+
+.video-loader-sub {
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.78;
+  max-width: 310px;
+  line-height: 1.4;
+}
+
+.video-tap-play {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(88%, 340px);
+  font-size: 1rem;
+  padding: 12px 18px;
+  box-shadow: 0 0 28px rgba(57, 255, 122, 0.55);
+}
+
+.video-tap-play:active {
+  transform: translate(-50%, -50%) scale(0.97);
 }
 
 .video-error {
@@ -1220,9 +1310,9 @@ select.field {
 .desk-team-photo {
   display: block;
   width: 100%;
-  height: min(28dvh, 240px);
+  height: min(24dvh, 210px);
   object-fit: cover;
-  object-position: center 62%;
+  object-position: center 54%;
   border: 1px solid var(--accent-dim);
   border-radius: 10px;
   flex-shrink: 0;
@@ -1237,15 +1327,15 @@ select.field {
 
 .desk-log {
   flex: 1;
-  min-height: 110px;
+  min-height: 135px;
   overflow-y: auto;
-  padding: 12px;
+  padding: 14px;
   background: #020604;
   border: 1px solid var(--line);
   border-radius: 8px;
   font-family: var(--font-mono);
-  font-size: 0.84rem;
-  line-height: 1.65;
+  font-size: 0.94rem;
+  line-height: 1.72;
   color: var(--accent);
   direction: rtl;
 }
@@ -1253,8 +1343,23 @@ select.field {
 .desk-log-line {
   unicode-bidi: plaintext;
   text-align: start;
-  animation: fadeIn 0.2s ease;
+  animation: fadeIn 0.28s ease;
   word-break: break-word;
+  padding: 2px 0;
+  opacity: 0.84;
+}
+
+.desk-log-line:last-child {
+  opacity: 1;
+  color: #e6ffef;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(57, 255, 122, 0.65);
+}
+
+.desk-repeat-skip {
+  padding: 8px 14px;
+  min-height: 40px;
+  font-size: 0.9rem;
 }
 
 .desk-progress {
@@ -1706,7 +1811,8 @@ select.field {
 
 .overlay .video-wrap.is-portrait {
   height: min(50dvh, 460px);
-  width: 100%;
+  width: auto;
+  max-width: 100%;
 }
 
 .viewer-image {

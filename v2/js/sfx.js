@@ -137,20 +137,50 @@ window.SFX = (function () {
     tick: function () {
       if (muted || anyVideoPlaying()) return;
       const now = performance.now();
-      if (now - lastTickAt < 44) return;
+      if (now - lastTickAt < 36) return;
       lastTickAt = now;
-      tone(920 + Math.random() * 180, 0.014, "triangle", 0.018);
+      const c = ensureCtx();
+      if (!c) return;
+      const t = c.currentTime;
+
+      // Primary CRT teletype pulse (crisp & clearly audible on mobile speakers)
+      const osc1 = c.createOscillator();
+      const g1 = c.createGain();
+      const baseFreq = 820 + Math.random() * 170;
+      osc1.type = "square";
+      osc1.frequency.setValueAtTime(baseFreq, t);
+      osc1.frequency.exponentialRampToValueAtTime(540, t + 0.028);
+      g1.gain.setValueAtTime(0.0001, t);
+      g1.gain.linearRampToValueAtTime(0.085, t + 0.002);
+      g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.028);
+      osc1.connect(g1);
+      g1.connect(c.destination);
+      osc1.start(t);
+      osc1.stop(t + 0.032);
+
+      // Subtle mechanical key-click transient
+      const osc2 = c.createOscillator();
+      const g2 = c.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(1520 + Math.random() * 240, t);
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.linearRampToValueAtTime(0.06, t + 0.0015);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+      osc2.connect(g2);
+      g2.connect(c.destination);
+      osc2.start(t);
+      osc2.stop(t + 0.015);
     },
 
     click: function () {
       if (muted || anyVideoPlaying()) return;
-      tone(660, 0.024, "triangle", 0.028, 0, 420);
+      tone(660, 0.028, "triangle", 0.045, 0, 420);
     },
 
     scanBlip: function (ratio) {
       if (muted || anyVideoPlaying()) return;
       const r = Math.max(0, Math.min(1, ratio || 0));
-      tone(380 + r * 480, 0.032, "sine", 0.025);
+      tone(380 + r * 480, 0.038, "sine", 0.042);
     },
 
     correct: function () {

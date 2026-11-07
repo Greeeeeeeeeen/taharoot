@@ -38,13 +38,29 @@
 
         <button id="btn-start" class="btn btn-primary" data-text="startButton"></button>
         <button id="btn-resume" class="btn btn-ghost hidden" data-text="resumeButton"></button>
+
+        <div id="preload-box" class="preload-box">
+          <div id="preload-label" class="preload-label"></div>
+          <div class="desk-progress preload-track">
+            <div id="preload-bar" class="desk-progress-bar"></div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- Video -->
     <section id="screen-video" class="screen">
       <div class="video-wrap" id="intro-video-wrap">
-        <video id="intro-video" playsinline webkit-playsinline preload="metadata"></video>
+        <video id="intro-video" playsinline webkit-playsinline preload="none"></video>
+        <div id="intro-video-loader" class="video-loader hidden">
+          <div class="video-loader-title" data-text="videoDownloadingTitle"></div>
+          <div class="desk-progress video-loader-track">
+            <div id="intro-loader-bar" class="desk-progress-bar"></div>
+          </div>
+          <div id="intro-loader-meta" class="video-loader-meta">0%</div>
+          <div class="video-loader-sub" data-text="videoDownloadingSub"></div>
+        </div>
+        <button id="intro-tap-play" class="btn btn-primary video-tap-play hidden" type="button" data-text="videoTapToPlay"></button>
         <div id="video-error" class="video-error hidden">
           <div class="video-error-title" data-text="videoMissing"></div>
           <div class="video-error-sub" data-text="videoMissingSub"></div>
@@ -197,7 +213,16 @@
 
         <div id="final-video-stage" class="case-body final-video-stage hidden">
           <div class="video-wrap video-portrait" id="final-video-wrap">
-            <video id="final-video" playsinline webkit-playsinline preload="metadata"></video>
+            <video id="final-video" playsinline webkit-playsinline preload="none"></video>
+            <div id="final-video-loader" class="video-loader hidden">
+              <div class="video-loader-title" data-text="videoDownloadingTitle"></div>
+              <div class="desk-progress video-loader-track">
+                <div id="final-loader-bar" class="desk-progress-bar"></div>
+              </div>
+              <div id="final-loader-meta" class="video-loader-meta">0%</div>
+              <div class="video-loader-sub" data-text="videoDownloadingSub"></div>
+            </div>
+            <button id="final-tap-play" class="btn btn-primary video-tap-play hidden" type="button" data-text="videoTapToPlay"></button>
             <div id="final-video-error" class="video-error hidden">
               <div class="video-error-title" data-text="mediaMissing"></div>
               <div class="video-error-sub" data-text="videoMissingSub"></div>
@@ -245,7 +270,16 @@
       </div>
       <div class="viewer-scroll">
         <div id="viewer-video-wrap" class="video-wrap">
-          <video id="viewer-video" playsinline webkit-playsinline controls preload="metadata"></video>
+          <video id="viewer-video" playsinline webkit-playsinline controls preload="none"></video>
+          <div id="viewer-video-loader" class="video-loader hidden">
+            <div class="video-loader-title" data-text="videoDownloadingTitle"></div>
+            <div class="desk-progress video-loader-track">
+              <div id="viewer-loader-bar" class="desk-progress-bar"></div>
+            </div>
+            <div id="viewer-loader-meta" class="video-loader-meta">0%</div>
+            <div class="video-loader-sub" data-text="videoDownloadingSub"></div>
+          </div>
+          <button id="viewer-tap-play" class="btn btn-primary video-tap-play hidden" type="button" data-text="videoTapToPlay"></button>
           <div id="viewer-error" class="video-error hidden">
             <div class="video-error-title" data-text="mediaMissing"></div>
             <div class="video-error-sub" data-text="videoMissingSub"></div>
@@ -402,7 +436,16 @@
 
       <div id="desk-stage-video" class="desk-stage">
         <div class="video-wrap" id="desk-video-wrap">
-          <video id="desk-video" playsinline webkit-playsinline preload="metadata"></video>
+          <video id="desk-video" playsinline webkit-playsinline preload="none"></video>
+          <div id="desk-video-loader" class="video-loader hidden">
+            <div class="video-loader-title" data-text="videoDownloadingTitle"></div>
+            <div class="desk-progress video-loader-track">
+              <div id="desk-loader-bar" class="desk-progress-bar"></div>
+            </div>
+            <div id="desk-loader-meta" class="video-loader-meta">0%</div>
+            <div class="video-loader-sub" data-text="videoDownloadingSub"></div>
+          </div>
+          <button id="desk-tap-play" class="btn btn-primary video-tap-play hidden" type="button" data-text="videoTapToPlay"></button>
         </div>
         <button id="btn-desk-skip" class="btn btn-ghost" type="button" data-text="skipButton"></button>
       </div>
@@ -413,6 +456,7 @@
         <div id="desk-log" class="desk-log"></div>
         <div class="desk-progress"><div id="desk-progress-bar" class="desk-progress-bar"></div></div>
         <div id="desk-progress-label" class="desk-progress-label"></div>
+        <button id="btn-desk-process-skip" class="btn btn-ghost desk-repeat-skip hidden" type="button" data-text="deskSkipRepeatButton"></button>
       </div>
 
       <div id="desk-stage-result" class="desk-stage hidden">

@@ -67,6 +67,432 @@
   attachSmartAspect($("viewer-video"), $("viewer-video-wrap"));
   attachSmartAspect($("desk-video"), $("desk-video-wrap"));
 
+  /* ---------- Full Video Pre-Downloader & Zero-Lag Blob Player ---------- */
+  const VIDEO_CACHE_NAME = "taharoot-v2-videos-v1";
+
+  function formatMB(bytes) {
+    return (Math.max(0, bytes || 0) / (1024 * 1024)).toFixed(1);
+  }
+
+  function formatEntryMeta(entry) {
+    const pct = Math.max(0, Math.min(100, Math.round(entry.progress || 0)));
+    if (entry.total > 0) {
+      return pct + "% · " + formatMB(entry.loaded) + " / " + formatMB(entry.total) + " MB";
+    }
+    if (entry.loaded > 0) {
+      return pct + "% · " + formatMB(entry.loaded) + " MB";
+    }
+    return pct + "%";
+  }
+
+  const VideoVault = (function () {
+    const entries = new Map();
+    const queue = [];
+    const MAX_CONCURRENT = 2;
+    let activeCount = 0;
+
+    function getOrCreate(url) {
+      if (!url) return null;
+      let entry = entries.get(url);
+      if (!entry) {
+        entry = {
+          url,
+          status: "idle", // "idle" | "downloading" | "ready" | "missing"
+          progress: 0,
+          loaded: 0,
+          total: 0,
+          blobUrl: null,
+          abortForForeground: null,
+          listeners: new Set(),
+        };
+        entries.set(url, entry);
+      }
+      return entry;
+    }
+
+    function notify(entry) {
+      entry.listeners.forEach((fn) => {
+        try {
+          fn(entry);
+        } catch (e) {}
+      });
+      updateGlobalPreloadUI();
+    }
+
+    function updateGlobalPreloadUI() {
+      const box = $("preload-box");
+      const label = $("preload-label");
+      const bar = $("preload-bar");
+      if (!box || !label || !bar) return;
+
+      const all = Array.from(entries.values());
+      if (!all.length) {
+        box.classList.add("hidden");
+        return;
+      }
+
+      const valid = all.filter((e) => e.status !== "missing");
+      const pending = all.some((e) => e.status === "idle" || e.status === "downloading");
+      if (!valid.length) {
+        box.classList.add("hidden");
+        return;
+      }
+
+      if (!pending) {
+        box.classList.add("preload-ready");
+        bar.style.width = "100%";
+        label.textContent = CONTENT.preloadReady;
+        return;
+      }
+
+      box.classList.remove("preload-ready");
+      const sumPct = valid.reduce((acc, e) => acc + (e.status === "ready" ? 100 : e.progress || 0), 0);
+      const avgPct = Math.min(99, Math.max(1, Math.round(sumPct / valid.length)));
+      bar.style.width = avgPct + "%";
+      label.textContent = CONTENT.preloadSyncing.replace("{p}", avgPct);
+    }
+
+    async function readCachedBlob(url) {
+      if (!("caches" in window)) return null;
+      try {
+        const cache = await caches.open(VIDEO_CACHE_NAME);
+        const res = await cache.match(url);
+        if (!res || res.status !== 200) return null;
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("text/html")) return null;
+        const blob = await res.blob();
+        if (!blob || blob.size === 0) return null;
+        return blob.type === "video/mp4" ? blob : new Blob([blob], { type: "video/mp4" });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writeCachedBlob(url, mp4Blob) {
+      if (!("caches" in window)) return;
+      try {
+        caches
+          .open(VIDEO_CACHE_NAME)
+          .then((cache) => cache.put(url, new Response(mp4Blob, { headers: { "Content-Type": "video/mp4" } })))
+          .catch(() => {});
+      } catch (e) {}
+    }
+
+    function pumpQueue() {
+      while (activeCount < MAX_CONCURRENT && queue.length > 0) {
+        const next = queue.shift();
+        if (next && next.status === "idle") {
+          startDownload(next);
+        }
+      }
+    }
+
+    async function startDownload(entry) {
+      if (!entry || entry.status !== "idle") return;
+      entry.status = "downloading";
+      entry.progress = 1;
+      activeCount++;
+      notify(entry);
+
+      const cached = await readCachedBlob(entry.url);
+      if (cached) {
+        entry.blobUrl = URL.createObjectURL(cached);
+        entry.loaded = cached.size;
+        entry.total = cached.size;
+        entry.progress = 100;
+        entry.status = "ready";
+        activeCount = Math.max(0, activeCount - 1);
+        notify(entry);
+        pumpQueue();
+        return;
+      }
+
+      let yielded = false;
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", entry.url, true);
+      xhr.responseType = "blob";
+
+      entry.abortForForeground = () => {
+        if (entry.status !== "downloading" || entry.listeners.size > 0 || entry.progress >= 75) return;
+        yielded = true;
+        entry.abortForForeground = null;
+        try {
+          xhr.abort();
+        } catch (e) {}
+      };
+
+      xhr.onprogress = (e) => {
+        entry.loaded = e.loaded || 0;
+        if (e.lengthComputable && e.total > 0) {
+          entry.total = e.total;
+          entry.progress = Math.min(99, Math.max(1, Math.round((e.loaded / e.total) * 100)));
+        } else if (entry.loaded > 0) {
+          entry.progress = Math.min(94, Math.max(2, Math.round((1 - Math.exp(-entry.loaded / (2.5 * 1024 * 1024))) * 95)));
+        }
+        notify(entry);
+      };
+
+      xhr.onload = () => {
+        entry.abortForForeground = null;
+        const ct = (xhr.getResponseHeader("content-type") || "").toLowerCase();
+        const blob = xhr.response;
+        if (xhr.status >= 200 && xhr.status < 300 && blob && blob.size > 0 && !ct.includes("text/html")) {
+          const mp4Blob = blob.type === "video/mp4" ? blob : new Blob([blob], { type: "video/mp4" });
+          entry.blobUrl = URL.createObjectURL(mp4Blob);
+          entry.loaded = mp4Blob.size;
+          entry.total = mp4Blob.size;
+          entry.progress = 100;
+          entry.status = "ready";
+          writeCachedBlob(entry.url, mp4Blob);
+        } else {
+          entry.status = "missing";
+          entry.progress = 100;
+        }
+        activeCount = Math.max(0, activeCount - 1);
+        notify(entry);
+        pumpQueue();
+      };
+
+      xhr.onerror = xhr.onabort = () => {
+        entry.abortForForeground = null;
+        if (yielded) {
+          entry.status = "idle";
+          entry.progress = 0;
+          entry.loaded = 0;
+          activeCount = Math.max(0, activeCount - 1);
+          if (!queue.includes(entry)) queue.unshift(entry);
+          notify(entry);
+          return;
+        }
+        entry.status = "missing";
+        entry.progress = 100;
+        activeCount = Math.max(0, activeCount - 1);
+        notify(entry);
+        pumpQueue();
+      };
+
+      try {
+        xhr.send();
+      } catch (e) {
+        entry.status = "missing";
+        entry.progress = 100;
+        activeCount = Math.max(0, activeCount - 1);
+        notify(entry);
+        pumpQueue();
+      }
+    }
+
+    return {
+      enqueueAll: function (urls) {
+        urls.forEach((u) => {
+          if (!u) return;
+          const e = getOrCreate(u);
+          if (e && e.status === "idle" && !queue.includes(e)) {
+            queue.push(e);
+          }
+        });
+        updateGlobalPreloadUI();
+        pumpQueue();
+      },
+
+      prioritize: function (url, exclusiveForeground) {
+        const entry = getOrCreate(url);
+        if (!entry) return null;
+        if (exclusiveForeground && entry.status !== "ready" && entry.status !== "missing") {
+          entries.forEach((other) => {
+            if (other !== entry && other.abortForForeground) {
+              other.abortForForeground();
+            }
+          });
+        }
+        if (entry.status === "idle") {
+          const qIdx = queue.indexOf(entry);
+          if (qIdx >= 0) queue.splice(qIdx, 1);
+          // Start immediately on user demand so it never waits behind background items
+          startDownload(entry);
+        }
+        return entry;
+      },
+
+      subscribe: function (entry, fn) {
+        if (!entry) return function () {};
+        entry.listeners.add(fn);
+        return function () {
+          entry.listeners.delete(fn);
+        };
+      },
+    };
+  })();
+
+  function createGatedVideoPlayer(cfg) {
+    const videoEl = cfg.videoEl;
+    const loaderEl = cfg.loaderEl;
+    const barEl = cfg.barEl;
+    const metaEl = cfg.metaEl;
+    const tapBtn = cfg.tapBtn;
+    const errorEl = cfg.errorEl;
+    const showControls = cfg.showControls !== false;
+
+    let runToken = 0;
+    let unsubscribe = null;
+
+    if (tapBtn && videoEl) {
+      tapBtn.addEventListener("click", () => {
+        tapBtn.classList.add("hidden");
+        videoEl.controls = showControls;
+        const p = videoEl.play();
+        if (p && p.catch) p.catch(() => {});
+      });
+      videoEl.addEventListener("play", () => {
+        tapBtn.classList.add("hidden");
+      });
+    }
+
+    function detach() {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    }
+
+    function mountReadyBlob(entry, token, callbacks) {
+      if (token !== runToken) return;
+      if (loaderEl) loaderEl.classList.add("hidden");
+      if (errorEl) errorEl.classList.add("hidden");
+      if (tapBtn) tapBtn.classList.add("hidden");
+
+      videoEl.src = entry.blobUrl;
+      videoEl.controls = showControls;
+      const attempt = videoEl.play();
+      if (attempt && attempt.catch) {
+        attempt.catch(() => {
+          if (token !== runToken || videoEl.error) return;
+          videoEl.controls = true;
+          if (tapBtn) tapBtn.classList.remove("hidden");
+        });
+      }
+      if (callbacks && callbacks.onReady) callbacks.onReady();
+    }
+
+    function handleMissing(token, callbacks) {
+      if (token !== runToken) return;
+      if (loaderEl) loaderEl.classList.add("hidden");
+      if (tapBtn) tapBtn.classList.add("hidden");
+      videoEl.pause();
+      videoEl.removeAttribute("src");
+      if (errorEl) errorEl.classList.remove("hidden");
+      if (callbacks && callbacks.onMissing) callbacks.onMissing();
+    }
+
+    return {
+      open: function (url, callbacks) {
+        runToken++;
+        const token = runToken;
+        detach();
+
+        if (errorEl) errorEl.classList.add("hidden");
+        if (tapBtn) tapBtn.classList.add("hidden");
+        videoEl.pause();
+
+        const entry = VideoVault.prioritize(url, true);
+        if (!entry || entry.status === "missing") {
+          handleMissing(token, callbacks);
+          return;
+        }
+
+        if (entry.status === "ready" && entry.blobUrl) {
+          mountReadyBlob(entry, token, callbacks);
+          return;
+        }
+
+        // Strict zero-lag gate: keep <video> empty & locked until 100% downloaded into RAM!
+        videoEl.controls = false;
+        videoEl.removeAttribute("src");
+        try {
+          videoEl.load();
+        } catch (e) {}
+
+        if (loaderEl) loaderEl.classList.remove("hidden");
+        if (barEl) barEl.style.width = Math.max(2, entry.progress || 0) + "%";
+        if (metaEl) metaEl.textContent = formatEntryMeta(entry);
+
+        unsubscribe = VideoVault.subscribe(entry, (updated) => {
+          if (token !== runToken) return;
+          if (barEl) barEl.style.width = Math.max(2, updated.progress || 0) + "%";
+          if (metaEl) metaEl.textContent = formatEntryMeta(updated);
+
+          if (updated.status === "ready" && updated.blobUrl) {
+            detach();
+            mountReadyBlob(updated, token, callbacks);
+          } else if (updated.status === "missing") {
+            detach();
+            handleMissing(token, callbacks);
+          }
+        });
+      },
+
+      stop: function () {
+        runToken++;
+        detach();
+        if (loaderEl) loaderEl.classList.add("hidden");
+        if (tapBtn) tapBtn.classList.add("hidden");
+        videoEl.pause();
+        videoEl.removeAttribute("src");
+        try {
+          videoEl.load();
+        } catch (e) {}
+      },
+    };
+  }
+
+  const introPlayer = createGatedVideoPlayer({
+    videoEl: $("intro-video"),
+    loaderEl: $("intro-video-loader"),
+    barEl: $("intro-loader-bar"),
+    metaEl: $("intro-loader-meta"),
+    tapBtn: $("intro-tap-play"),
+    errorEl: $("video-error"),
+    showControls: false,
+  });
+
+  const viewerPlayer = createGatedVideoPlayer({
+    videoEl: $("viewer-video"),
+    loaderEl: $("viewer-video-loader"),
+    barEl: $("viewer-loader-bar"),
+    metaEl: $("viewer-loader-meta"),
+    tapBtn: $("viewer-tap-play"),
+    errorEl: $("viewer-error"),
+    showControls: true,
+  });
+
+  const deskPlayer = createGatedVideoPlayer({
+    videoEl: $("desk-video"),
+    loaderEl: $("desk-video-loader"),
+    barEl: $("desk-loader-bar"),
+    metaEl: $("desk-loader-meta"),
+    tapBtn: $("desk-tap-play"),
+    errorEl: null,
+    showControls: false,
+  });
+
+  const finalPlayer = createGatedVideoPlayer({
+    videoEl: $("final-video"),
+    loaderEl: $("final-video-loader"),
+    barEl: $("final-loader-bar"),
+    metaEl: $("final-loader-meta"),
+    tapBtn: $("final-tap-play"),
+    errorEl: $("final-video-error"),
+    showControls: false,
+  });
+
+  // Immediately start pre-downloading all case videos in priority order on page load
+  VideoVault.enqueueAll(
+    [CONTENT.videoSrc]
+      .concat(CONTENT.witnesses.map((w) => w.video))
+      .concat(CONTENT.questionSets.map((s) => s.evidence && s.evidence.video))
+      .concat([CONTENT.finalVideo, CONTENT.deskVideo])
+  );
+
   /* ---------- Saved Progress & URL Params ---------- */
   const PROGRESS_KEY = "taharoot-v2-progress";
   const CASEFILE_KEY = "taharoot-v2-casefile";
@@ -207,18 +633,11 @@
     saveProgress();
     updateHeaderMeta();
 
-    // Prime intro video inside user tap handler so iOS Safari allows audio after scan.
-    const introVid = $("intro-video");
-    introVid.src = CONTENT.videoSrc;
-    const warm = introVid.play();
-    if (warm && warm.then) {
-      warm
-        .then(() => {
-          introVid.pause();
-          introVid.currentTime = 0;
-        })
-        .catch(() => {});
-    }
+    // Prioritize intro video download & unlock <video> gesture safely without race-pausing
+    VideoVault.prioritize(CONTENT.videoSrc);
+    try {
+      $("intro-video").load();
+    } catch (e) {}
 
     scanActive = true;
     const bar = $("scan-progress-bar");
@@ -279,15 +698,20 @@
     $("video-error").classList.add("hidden");
     $("btn-skip").classList.add("hidden");
     $("btn-continue").classList.add("hidden");
-    if (!video.getAttribute("src")) video.src = CONTENT.videoSrc;
-    const attempt = video.play();
-    if (attempt && attempt.catch) {
-      attempt.catch(() => {
-        if (!video.error) video.controls = true;
-      });
-    }
     clearTimeout(skipTimer);
-    skipTimer = setTimeout(() => reveal($("btn-skip")), SKIP_DELAY_MS);
+
+    // Fallback skip button in case reception is completely offline, while video stays gated until 100%
+    skipTimer = setTimeout(() => reveal($("btn-skip")), 4500);
+
+    introPlayer.open(CONTENT.videoSrc, {
+      onReady: () => {
+        clearTimeout(skipTimer);
+        skipTimer = setTimeout(() => reveal($("btn-skip")), SKIP_DELAY_MS);
+      },
+      onMissing: () => {
+        videoFinished();
+      },
+    });
   }
 
   function videoFinished() {
@@ -304,12 +728,12 @@
   });
 
   $("btn-skip").addEventListener("click", () => {
-    video.pause();
+    introPlayer.stop();
     videoFinished();
   });
 
   $("btn-continue").addEventListener("click", () => {
-    video.pause();
+    introPlayer.stop();
     startBriefing();
   });
 
@@ -791,7 +1215,7 @@
   }
 
   function playInformantVoice() {
-    if (!activeCallData || !window.SFX) return;
+    if (!activeCallData || !window.SFX) return false;
     const wave = $("call-waveform");
     wave.classList.add("speaking");
     const started = SFX.speakHebrew(activeCallData.ttsText, {
@@ -802,6 +1226,7 @@
       // Keep waveform active while transcript types if device is muted or lacks TTS
       setTimeout(() => wave.classList.remove("speaking"), 4500);
     }
+    return Boolean(started);
   }
 
   function answerInformantCall() {
@@ -821,13 +1246,13 @@
     }, 1000);
 
     // Speak Hebrew TTS directly inside user click handler AND type live text transcript
-    playInformantVoice();
+    const voiceStarted = playInformantVoice();
 
     callTyper = typewrite($("call-transcript"), activeCallData.transcript, {
       charDelay: 42,
       jitter: 18,
       pauseDelay: 550,
-      sound: false,
+      sound: !voiceStarted,
     });
   }
 
@@ -889,16 +1314,14 @@
     viewer.querySelector(".viewer-scroll").scrollTop = 0;
 
     if (item.video) {
-      viewerVideo.src = item.video;
-      const attempt = viewerVideo.play();
-      if (attempt && attempt.catch) attempt.catch(() => {});
+      viewerPlayer.open(item.video);
+    } else {
+      viewerPlayer.stop();
     }
   }
 
   function closeViewer() {
-    viewerVideo.pause();
-    viewerVideo.removeAttribute("src");
-    viewerVideo.load();
+    viewerPlayer.stop();
     $("viewer-image").removeAttribute("src");
     activeViewerWitness = null;
     activeUvScene = null;
@@ -1030,18 +1453,10 @@
   syncWitnessTagsUI();
 
   /* ---------- Evidence & Background Video Preloader ---------- */
-  const preloaderVideo = document.createElement("video");
-  preloaderVideo.preload = "metadata";
-  preloaderVideo.muted = true;
-  preloaderVideo.style.display = "none";
-  document.body.appendChild(preloaderVideo);
-
   function preloadSetEvidence(idx) {
     const set = CONTENT.questionSets[idx];
     if (!set || !set.evidence || !set.evidence.video) return;
-    if (preloaderVideo.getAttribute("data-src") === set.evidence.video) return;
-    preloaderVideo.setAttribute("data-src", set.evidence.video);
-    preloaderVideo.src = set.evidence.video;
+    VideoVault.prioritize(set.evidence.video);
   }
 
   const evidenceCards = CONTENT.questionSets.map((set) => {
@@ -1877,34 +2292,35 @@
   }
 
   function stopDeskVideo() {
-    deskVideo.pause();
-    deskVideo.removeAttribute("src");
-    deskVideo.load();
+    deskPlayer.stop();
   }
+
+  let deskWitnessIndex = -1;
 
   function openDesk(witness) {
     deskRun++;
+    deskTimers.forEach(clearTimeout);
+    deskTimers = [];
     deskWitness = witness;
+    deskWitnessIndex = CONTENT.witnesses.indexOf(witness);
     deskOverlay.classList.remove("hidden");
 
-    const wIdx = CONTENT.witnesses.indexOf(witness);
-    // If already analyzed earlier, still allow viewing results fast or re-running? Let's skip process if already done?
-    // Wait: keeping the fun animation on click or jumping straight to result? Let's run process, or let them click to skip!
-    if (!CONTENT.deskVideo) {
-      runDeskProcess(deskRun, wIdx);
+    const deskEntry = CONTENT.deskVideo ? VideoVault.prioritize(CONTENT.deskVideo) : null;
+    if (!deskEntry || deskEntry.status === "missing") {
+      runDeskProcess(deskRun, deskWitnessIndex);
       return;
     }
     showDeskStage("video");
-    deskVideo.src = CONTENT.deskVideo;
-    const attempt = deskVideo.play();
-    if (attempt && attempt.catch) attempt.catch(() => {});
+    deskPlayer.open(CONTENT.deskVideo, {
+      onMissing: () => deskVideoDone(),
+    });
   }
 
   function deskVideoDone() {
     if (deskOverlay.classList.contains("hidden")) return;
     if ($("desk-stage-video").classList.contains("hidden")) return;
     stopDeskVideo();
-    runDeskProcess(deskRun);
+    runDeskProcess(deskRun, deskWitnessIndex);
   }
 
   deskVideo.addEventListener("ended", deskVideoDone);
@@ -1912,6 +2328,12 @@
     if (deskVideo.getAttribute("src")) deskVideoDone();
   });
   $("btn-desk-skip").addEventListener("click", deskVideoDone);
+
+  $("btn-desk-process-skip").addEventListener("click", () => {
+    deskTimers.forEach(clearTimeout);
+    deskTimers = [];
+    showDeskResult();
+  });
 
   function buildWitnessDeskLines(witness) {
     const grandma = witness.gender === "f" ? "סבתא שלה" : "סבתא שלו";
@@ -1923,13 +2345,18 @@
     return base;
   }
 
-  function runDeskProcess(run) {
+  function runDeskProcess(run, wIdx) {
     showDeskStage("process");
     const log = $("desk-log");
     const bar = $("desk-progress-bar");
     const label = $("desk-progress-label");
+    const repeatSkipBtn = $("btn-desk-process-skip");
     log.textContent = "";
     bar.style.width = "0%";
+
+    // Show quick-skip button only if this witness was already analyzed earlier
+    const alreadyAnalyzed = typeof wIdx === "number" && progress.deskDone.includes(wIdx);
+    repeatSkipBtn.classList.toggle("hidden", !alreadyAnalyzed);
 
     const lines = buildWitnessDeskLines(deskWitness);
     const duration = CONTENT.deskDurationMs;
@@ -1953,8 +2380,8 @@
       const p = Math.min(100, Math.round(((Date.now() - start) / duration) * 100));
       bar.style.width = p + "%";
       label.textContent = CONTENT.deskProgressLabel.replace("{p}", p);
-      if (p < 100) deskLater(tick, 80);
-      else deskLater(() => run === deskRun && showDeskResult(), 450);
+      if (p < 100) deskLater(tick, 90);
+      else deskLater(() => run === deskRun && showDeskResult(), 950);
     })();
   }
 
@@ -2026,10 +2453,10 @@
 
     const text = witness.desk.map((f) => "▸ " + f).join("|\n\n");
     deskTyper = typewrite($("desk-findings"), text, {
-      charDelay: 32,
+      charDelay: 42,
       jitter: 18,
-      punctuationDelay: 180,
-      pauseDelay: 420,
+      punctuationDelay: 220,
+      pauseDelay: 600,
       onDone: () => {
         deskRowUI[index].done.classList.remove("hidden");
         markDone("deskDone", index);
@@ -2132,21 +2559,24 @@
     showFinalStage("video");
     $("final-video-error").classList.add("hidden");
     $("btn-final-video-skip").classList.add("hidden");
-    finalVideo.src = CONTENT.finalVideo;
-    const attempt = finalVideo.play();
-    if (attempt && attempt.catch) {
-      attempt.catch(() => {
-        if (!finalVideo.error) finalVideo.controls = true;
-      });
-    }
     clearTimeout(finalSkipTimer);
-    finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), SKIP_DELAY_MS);
+    finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), 4500);
+
+    finalPlayer.open(CONTENT.finalVideo, {
+      onReady: () => {
+        clearTimeout(finalSkipTimer);
+        finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), SKIP_DELAY_MS);
+      },
+      onMissing: () => {
+        reveal($("btn-final-video-skip"));
+      },
+    });
   }
 
   function finalVideoDone() {
     if ($("final-video-stage").classList.contains("hidden")) return;
     clearTimeout(finalSkipTimer);
-    finalVideo.pause();
+    finalPlayer.stop();
     showFinalEnd(false);
   }
 

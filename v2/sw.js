@@ -1,4 +1,4 @@
-const CACHE_NAME = "taharoot-v2-shell-v1";
+const CACHE_NAME = "taharoot-v2-shell-v2";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
