@@ -270,7 +270,7 @@
       </div>
       <div class="viewer-scroll">
         <div id="viewer-video-wrap" class="video-wrap">
-          <video id="viewer-video" playsinline webkit-playsinline controls preload="none"></video>
+          <video id="viewer-video" playsinline webkit-playsinline preload="none"></video>
           <div id="viewer-video-loader" class="video-loader hidden">
             <div class="video-loader-title" data-text="videoDownloadingTitle"></div>
             <div class="desk-progress video-loader-track">
@@ -405,9 +405,6 @@
           </div>
           <div id="uv-findings-list" class="uv-findings-list"></div>
         </div>
-
-        <!-- Attached Investigator Document (Evidence) -->
-        <div id="viewer-doc" class="viewer-doc hidden"></div>
 
         <!-- Live-Synced Quick Notes (Witness Statements) -->
         <div id="viewer-quick-notes" class="viewer-quick-notes hidden">
@@ -562,6 +559,31 @@
           <button id="btn-judge-copy-link" class="btn btn-ghost" type="button" data-text="judgeCopyLinkButton"></button>
         </div>
         <div id="judge-link-feedback" class="share-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Sideways Cinema Video Player -->
+  <div id="cinema-overlay" class="cinema-overlay hidden" role="dialog" aria-modal="true">
+    <div id="cinema-stage" class="cinema-stage">
+      <video id="cinema-video" class="cinema-video" playsinline webkit-playsinline preload="auto"></video>
+      <div id="cinema-hud" class="cinema-hud">
+        <div class="cinema-top">
+          <span class="rec-dot"></span>
+          <span id="cinema-title" class="cinema-title"></span>
+          <button id="btn-cinema-rotate" class="cinema-chip" type="button" data-text="cinemaRotateButton"></button>
+          <button id="btn-cinema-close" class="cinema-chip cinema-close" type="button" data-text="cinemaCloseButton"></button>
+        </div>
+        <div class="cinema-bottom" dir="ltr">
+          <button id="btn-cinema-play" class="cinema-ctrl-btn" type="button" aria-label="נגן/השהה">⏸</button>
+          <button id="btn-cinema-rew" class="cinema-ctrl-btn cinema-rew" type="button" aria-label="אחורה 5 שניות">↺ 5s</button>
+          <div id="cinema-progress-wrap" class="cinema-progress-wrap">
+            <div id="cinema-progress-track" class="cinema-progress-track">
+              <div id="cinema-progress-fill" class="cinema-progress-fill"></div>
+            </div>
+          </div>
+          <span id="cinema-time" class="cinema-time">0:00 / 0:00</span>
+        </div>
       </div>
     </div>
   </div>
