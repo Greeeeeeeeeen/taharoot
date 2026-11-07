@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#050a07">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="תיק חקירה">
+  <title>תיק חקירה</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div id="decrypted-toast" class="decrypted-toast hidden" role="status" aria-live="polite"></div>
+
+  <main id="app">
+    <!-- Start -->
+    <section id="screen-start" class="screen active">
+      <div class="start-topbar">
+        <button class="header-chip btn-mute-toggle" type="button"></button>
+      </div>
+      <div class="start-inner">
+        <div id="start-badge" class="badge" data-text="startBadge"></div>
+        <h1 class="title" data-text="title"></h1>
+        <p class="subtitle" data-text="subtitle"></p>
+
+        <div class="team-box">
+          <label class="team-label" for="team-input" data-text="teamLabel"></label>
+          <input id="team-input" class="field team-input" type="text" maxlength="36" autocomplete="off">
+        </div>
+
+        <button id="btn-start" class="btn btn-primary" data-text="startButton"></button>
+        <button id="btn-resume" class="btn btn-ghost hidden" data-text="resumeButton"></button>
+      </div>
+    </section>
+
+    <!-- Video -->
+    <section id="screen-video" class="screen">
+      <div class="video-wrap" id="intro-video-wrap">
+        <video id="intro-video" playsinline webkit-playsinline preload="metadata"></video>
+        <div id="video-error" class="video-error hidden">
+          <div class="video-error-title" data-text="videoMissing"></div>
+          <div class="video-error-sub" data-text="videoMissingSub"></div>
+        </div>
+      </div>
+      <div class="video-controls">
+        <button id="btn-skip" class="btn btn-ghost hidden" data-text="skipButton"></button>
+        <button id="btn-continue" class="btn btn-primary hidden" data-text="continueButton"></button>
+      </div>
+    </section>
+
+    <!-- Briefing -->
+    <section id="screen-briefing" class="screen">
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="rec-dot"></span>
+          <span class="header-grow" data-text="briefingHeader"></span>
+          <button class="header-chip btn-mute-toggle" type="button"></button>
+        </div>
+        <div id="briefing-text" class="terminal-body"></div>
+        <div class="tap-hint" id="tap-hint" data-text="tapToSkip"></div>
+      </div>
+      <div class="screen-footer">
+        <button id="btn-briefing-next" class="btn btn-primary hidden" data-text="briefingNextButton"></button>
+      </div>
+    </section>
+
+    <!-- Case: witnesses / questions / evidence / casefile / desk -->
+    <section id="screen-case" class="screen">
+      <div id="case-terminal" class="terminal">
+        <div class="terminal-header case-header">
+          <span id="case-rec-dot" class="rec-dot" title="מצ״ח"></span>
+          <span id="case-header-title" class="case-header-title" data-text="caseHeader"></span>
+          <span id="case-team-tag" class="header-tag"></span>
+          <span class="header-spacer"></span>
+          <span id="case-timer" class="header-timer" aria-label="זמן חקירה">00:00</span>
+          <button id="btn-split-view" class="header-chip desktop-only" type="button" data-text="splitViewLabel"></button>
+          <button class="header-chip btn-mute-toggle" type="button"></button>
+        </div>
+
+        <button id="final-ready-bar" class="final-ready-bar btn-to-final hidden" type="button" data-text="finalReadyBanner"></button>
+
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="witnesses" type="button">
+            <span data-text="tabWitnesses"></span>
+            <span id="count-witnesses" class="tab-count"></span>
+          </button>
+          <button class="tab" data-tab="questions" type="button">
+            <span data-text="tabQuestions"></span>
+            <span id="count-questions" class="tab-count"></span>
+          </button>
+          <button class="tab" data-tab="evidence" type="button">
+            <span data-text="tabEvidence"></span>
+            <span id="count-evidence" class="tab-count"></span>
+            <span id="evidence-badge" class="tab-badge hidden"></span>
+          </button>
+          <button class="tab" data-tab="casefile" type="button">
+            <span data-text="tabCaseFile"></span>
+          </button>
+          <button class="tab" data-tab="desk" type="button">
+            <span data-text="tabDesk"></span>
+            <span id="count-desk" class="tab-count"></span>
+          </button>
+        </nav>
+
+        <div id="case-workspace" class="case-workspace">
+          <div class="case-body tab-panel active" id="panel-witnesses">
+            <p class="panel-intro" data-text="witnessesIntro"></p>
+            <div id="witness-grid" class="witness-grid"></div>
+          </div>
+
+          <div class="case-body tab-panel" id="panel-questions">
+            <div id="question-progress" class="question-progress"></div>
+            <h2 id="question-text" class="question-text"></h2>
+            <div id="question-options" class="question-options"></div>
+            <div id="question-feedback" class="question-feedback"></div>
+            <div id="question-takeaway" class="question-takeaway hidden"></div>
+            <button id="btn-next-question" class="btn btn-primary hidden" type="button"></button>
+            <button class="btn btn-final btn-to-final hidden" type="button" data-text="toFinalButton"></button>
+            <div class="keyboard-hint desktop-only" data-text="keyboardHint"></div>
+          </div>
+
+          <div class="case-body tab-panel" id="panel-evidence">
+            <p class="panel-intro" data-text="evidenceIntro"></p>
+            <div id="evidence-list" class="evidence-list"></div>
+            <button class="btn btn-final btn-to-final hidden" type="button" data-text="toFinalButton"></button>
+          </div>
+
+          <div class="case-body tab-panel" id="panel-casefile">
+            <div id="print-dossier-header" class="print-only"></div>
+            <p class="panel-intro no-print" data-text="caseFileIntro"></p>
+
+            <!-- Suspect Tracking & Connections Matrix -->
+            <div class="file-card board-card no-print">
+              <div class="board-header">
+                <h3 class="file-card-title board-title" data-text="boardTitle"></h3>
+                <button id="btn-toggle-board" class="chip-btn" type="button" data-text="boardToggleHide"></button>
+              </div>
+              <div id="suspect-board" class="suspect-board"></div>
+            </div>
+
+            <div class="file-card suspect-card">
+              <h3 class="file-card-title" data-text="suspectTitle"></h3>
+              <label class="field-label" for="suspect-select" data-text="suspectLabel"></label>
+              <select id="suspect-select" class="field"></select>
+              <input id="suspect-other" class="field hidden" type="text" autocomplete="off">
+              <label class="field-label" for="suspect-violations" data-text="suspectViolationsLabel"></label>
+              <div id="suspect-chips" class="violation-chips no-print"></div>
+              <textarea id="suspect-violations" class="field" rows="4"></textarea>
+            </div>
+
+            <div id="witness-files"></div>
+
+            <div class="casefile-actions no-print">
+              <button class="btn btn-final btn-to-final hidden" type="button" data-text="toFinalButton"></button>
+              <button id="btn-share-file" class="btn btn-primary" type="button" data-text="shareCaseFileButton"></button>
+              <div class="casefile-secondary-actions">
+                <button id="btn-case-card" class="btn btn-ghost hidden" type="button" data-text="finalCardButton"></button>
+                <button id="btn-print-file" class="btn btn-ghost desktop-only" type="button" data-text="printCaseFileButton"></button>
+              </div>
+              <div id="share-feedback" class="share-feedback"></div>
+              <button id="btn-new-case" class="btn btn-danger" type="button" data-text="newCaseButton"></button>
+            </div>
+          </div>
+
+          <div class="case-body tab-panel" id="panel-desk">
+            <p class="panel-intro" data-text="deskIntro"></p>
+            <div id="polygraph-banner" class="polygraph-banner"></div>
+            <div id="desk-list" class="desk-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final suspect -->
+    <section id="screen-final" class="screen">
+      <div class="terminal">
+        <div class="terminal-header">
+          <span class="rec-dot"></span>
+          <span class="header-grow" data-text="finalHeader"></span>
+          <button class="header-chip btn-mute-toggle" type="button"></button>
+        </div>
+
+        <div id="final-pick" class="case-body">
+          <p class="final-intro" data-text="finalIntro"></p>
+          <div id="final-grid" class="witness-grid final-grid"></div>
+          <button id="btn-final-submit" class="btn btn-final" type="button" data-text="finalSubmitButton" disabled></button>
+          <button id="btn-final-back" class="btn btn-ghost final-back" type="button" data-text="finalBackButton"></button>
+        </div>
+
+        <div id="final-video-stage" class="case-body final-video-stage hidden">
+          <div class="video-wrap video-portrait" id="final-video-wrap">
+            <video id="final-video" playsinline webkit-playsinline preload="metadata"></video>
+            <div id="final-video-error" class="video-error hidden">
+              <div class="video-error-title" data-text="mediaMissing"></div>
+              <div class="video-error-sub" data-text="videoMissingSub"></div>
+            </div>
+          </div>
+          <button id="btn-final-video-skip" class="btn btn-ghost hidden" type="button" data-text="skipButton"></button>
+        </div>
+
+        <div id="final-end" class="case-body final-end hidden">
+          <div class="final-stamp" data-text="finalStamp"></div>
+          <div id="final-stats" class="final-stats"></div>
+          <div id="final-end-text" class="terminal-body final-end-text"></div>
+          <div id="final-end-actions" class="final-end-actions hidden">
+            <button id="btn-final-card" class="btn btn-final" type="button" data-text="finalCardButton"></button>
+            <button id="btn-final-replay" class="btn btn-ghost" type="button" data-text="finalReplayButton"></button>
+            <button id="btn-final-to-case" class="btn btn-primary" type="button" data-text="finalToCaseButton"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Clearance scanner overlay -->
+  <div id="scan-overlay" class="overlay scan-overlay hidden" role="dialog" aria-modal="true">
+    <div class="scan-card">
+      <div class="scan-header" data-text="scanHeader"></div>
+      <div class="fingerprint-ring" id="fingerprint-ring" aria-hidden="true">
+        <div class="fingerprint-lines"></div>
+        <div class="fingerprint-beam"></div>
+      </div>
+      <div id="scan-team-name" class="scan-team-name"></div>
+      <div class="desk-progress"><div id="scan-progress-bar" class="desk-progress-bar"></div></div>
+      <div id="scan-status" class="scan-status" data-text="scanStatus"></div>
+      <div class="tap-hint" data-text="scanSkipHint"></div>
+    </div>
+  </div>
+
+  <!-- Viewer for statements and evidence -->
+  <div id="viewer" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-inner">
+      <div class="overlay-header">
+        <span class="rec-dot"></span>
+        <span id="viewer-title"></span>
+        <button id="btn-close-viewer" class="btn-close" type="button" aria-label="סגור">✕</button>
+      </div>
+      <div class="viewer-scroll">
+        <div id="viewer-video-wrap" class="video-wrap">
+          <video id="viewer-video" playsinline webkit-playsinline controls preload="metadata"></video>
+          <div id="viewer-error" class="video-error hidden">
+            <div class="video-error-title" data-text="mediaMissing"></div>
+            <div class="video-error-sub" data-text="videoMissingSub"></div>
+          </div>
+        </div>
+        <img id="viewer-image" class="viewer-image hidden" alt="">
+        <p id="viewer-text" class="viewer-text hidden"></p>
+
+        <!-- Evidence 4: Captured Phone WhatsApp Group Chat -->
+        <div id="viewer-phone" class="viewer-phone hidden">
+          <div class="phone-topbar">
+            <div class="phone-group-avatar">🔫</div>
+            <div class="phone-group-meta">
+              <div id="phone-group-name" class="phone-group-name"></div>
+              <div id="phone-group-sub" class="phone-group-sub"></div>
+            </div>
+          </div>
+          <div id="phone-messages" class="phone-messages"></div>
+        </div>
+
+        <!-- Evidence 5: Interactive UV Blacklight Forensic Scanner -->
+        <div id="viewer-uv" class="viewer-uv hidden">
+          <div class="uv-header">
+            <p id="uv-instruction" class="uv-instruction"></p>
+            <div id="uv-progress" class="uv-progress"></div>
+          </div>
+          <div id="uv-stage" class="uv-stage">
+            <!-- Normal dim room silhouette -->
+            <svg class="uv-svg uv-dark-layer" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="520" fill="#040807"/>
+              <!-- Walls & Floor -->
+              <line x1="0" y1="340" x2="800" y2="340" stroke="#13261b" stroke-width="2"/>
+              <line x1="560" y1="0" x2="560" y2="340" stroke="#13261b" stroke-width="2"/>
+              <!-- Waiting corner table (top-right) -->
+              <rect x="590" y="135" width="165" height="16" rx="3" fill="#0b1710" stroke="#1c3a26"/>
+              <line x1="610" y1="151" x2="610" y2="270" stroke="#1c3a26" stroke-width="4"/>
+              <line x1="735" y1="151" x2="735" y2="270" stroke="#1c3a26" stroke-width="4"/>
+              <rect x="622" y="106" width="26" height="29" rx="4" fill="#0d1d14" stroke="#244a31"/>
+              <rect x="688" y="112" width="28" height="23" rx="4" fill="#0d1d14" stroke="#244a31"/>
+              <!-- Main weapon inspection table -->
+              <polygon points="95,215 515,215 545,275 65,275" fill="#09130d" stroke="#1c3a26" stroke-width="2"/>
+              <rect x="65" y="275" width="480" height="18" fill="#07100a" stroke="#1c3a26"/>
+              <line x1="95" y1="293" x2="95" y2="425" stroke="#183322" stroke-width="8"/>
+              <line x1="515" y1="293" x2="515" y2="425" stroke="#183322" stroke-width="8"/>
+              <!-- Rifle silhouette on table -->
+              <g stroke="#295238" stroke-width="2.5" fill="#0c1a12">
+                <!-- Barrel & Muzzle -->
+                <rect x="135" y="232" width="115" height="9" rx="2"/>
+                <rect x="122" y="230" width="16" height="13" rx="2"/>
+                <!-- Handguard -->
+                <rect x="242" y="226" width="108" height="22" rx="4"/>
+                <!-- Receiver & Selector area -->
+                <rect x="350" y="224" width="112" height="28" rx="4"/>
+                <!-- Pistol grip -->
+                <polygon points="425,252 444,252 456,286 435,286"/>
+                <!-- Buttstock -->
+                <polygon points="462,226 525,218 525,260 462,248"/>
+                <!-- Carry handle / sight -->
+                <path d="M362,224 L372,210 L438,210 L446,224" fill="none"/>
+              </g>
+              <text x="305" y="192" fill="#1f422b" font-family="monospace" font-size="14" text-anchor="middle">ARMORY SCENE // CAM-02</text>
+            </svg>
+
+            <!-- UV Blacklight Fluorescent Layer (masked to cursor/finger beam) -->
+            <div id="uv-reveal-layer" class="uv-reveal-layer">
+              <svg class="uv-svg" viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg">
+                <rect width="800" height="520" fill="#120629"/>
+                <circle cx="400" cy="260" r="390" fill="rgba(138, 43, 226, 0.08)"/>
+                <!-- Glowing grid lines -->
+                <line x1="0" y1="340" x2="800" y2="340" stroke="#4d1f99" stroke-width="2"/>
+                <line x1="560" y1="0" x2="560" y2="340" stroke="#4d1f99" stroke-width="2"/>
+                <!-- Table & Rifle under UV -->
+                <polygon points="95,215 515,215 545,275 65,275" fill="#180a36" stroke="#6c30cc" stroke-width="2"/>
+                <g stroke="#8a4fff" stroke-width="2.5" fill="#1d0d40">
+                  <rect x="135" y="232" width="115" height="9" rx="2"/>
+                  <rect x="242" y="226" width="108" height="22" rx="4"/>
+                  <rect x="350" y="224" width="112" height="28" rx="4"/>
+                  <polygon points="425,252 444,252 456,286 435,286"/>
+                  <polygon points="462,226 525,218 525,260 462,248"/>
+                </g>
+
+                <!-- CLUE 1 (x=34%, y=44% -> ~272, 232): Glowing Guava & Honey smudges on Handguard! -->
+                <g fill="#52ff9a" opacity="0.95">
+                  <ellipse cx="268" cy="235" rx="18" ry="8"/>
+                  <ellipse cx="296" cy="240" rx="14" ry="7"/>
+                  <circle cx="282" cy="224" r="5"/>
+                  <circle cx="315" cy="233" r="6"/>
+                  <text x="285" y="205" fill="#52ff9a" font-family="Heebo, sans-serif" font-weight="700" font-size="15" text-anchor="middle">דבש + גויאבה!</text>
+                </g>
+
+                <!-- CLUE 2 (x=61%, y=47% -> ~488, 244): Selector switch left on FIRE + fingerprint -->
+                <g stroke="#ff52d9" fill="none" stroke-width="2.5">
+                  <circle cx="485" cy="244" r="22"/>
+                  <ellipse cx="485" cy="244" rx="9" ry="13"/>
+                  <ellipse cx="485" cy="244" rx="5" ry="8"/>
+                  <text x="485" y="206" fill="#ff52d9" stroke="none" font-family="Heebo, sans-serif" font-weight="700" font-size="15" text-anchor="middle">נצרה: בודדת (ללא פריקה!)</text>
+                </g>
+
+                <!-- CLUE 3 (x=26%, y=79% -> ~208, 410): Fluorescent boot print + tiny ant 'Malkishua' symbol -->
+                <g fill="#38f3ff" opacity="0.92">
+                  <ellipse cx="195" cy="412" rx="28" ry="13" transform="rotate(-14 195 412)"/>
+                  <ellipse cx="234" cy="404" rx="15" ry="11" transform="rotate(-14 234 404)"/>
+                  <circle cx="155" cy="422" r="4"/>
+                  <circle cx="147" cy="424" r="3"/>
+                  <text x="210" y="382" fill="#38f3ff" font-family="Heebo, sans-serif" font-weight="700" font-size="15" text-anchor="middle">טביעת נעל // תואם תיק "מלכישוע"</text>
+                </g>
+
+                <!-- CLUE 4 (x=80%, y=26% -> ~640, 135): Salt crystals & chamomile tea outside -->
+                <g fill="#ffe45e">
+                  <rect x="590" y="135" width="165" height="16" rx="3" fill="#24104a" stroke="#8a4fff"/>
+                  <rect x="622" y="106" width="26" height="29" rx="4" fill="none" stroke="#ffe45e" stroke-width="2.5"/>
+                  <rect x="688" y="112" width="28" height="23" rx="4" fill="none" stroke="#52ff9a" stroke-width="2.5"/>
+                  <circle cx="658" cy="130" r="3"/>
+                  <circle cx="666" cy="128" r="2.5"/>
+                  <circle cx="672" cy="132" r="3"/>
+                  <text x="668" y="92" fill="#ffe45e" font-family="Heebo, sans-serif" font-weight="700" font-size="14" text-anchor="middle">מלח + חליטת קמומיל (מחוץ לחדר)</text>
+                </g>
+              </svg>
+            </div>
+
+            <div id="uv-pins" class="uv-pins"></div>
+            <div id="uv-reticle" class="uv-reticle" aria-hidden="true"></div>
+          </div>
+          <div id="uv-findings-list" class="uv-findings-list"></div>
+        </div>
+
+        <!-- Attached Investigator Document (Evidence) -->
+        <div id="viewer-doc" class="viewer-doc hidden"></div>
+
+        <!-- Live-Synced Quick Notes (Witness Statements) -->
+        <div id="viewer-quick-notes" class="viewer-quick-notes hidden">
+          <div class="quick-notes-header">
+            <span data-text="quickNotesToggle"></span>
+            <span class="quick-notes-saved" data-text="quickNotesSaved"></span>
+          </div>
+          <label class="field-label" for="quick-statement" data-text="witnessStatementLabel"></label>
+          <textarea id="quick-statement" class="field quick-field" rows="2"></textarea>
+          <label class="field-label" for="quick-violations" data-text="witnessViolationsLabel"></label>
+          <div id="quick-chips" class="violation-chips"></div>
+          <textarea id="quick-violations" class="field quick-field" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desk analysis sequence -->
+  <div id="desk-overlay" class="desk-overlay hidden" role="dialog" aria-modal="true">
+    <div class="desk-overlay-inner">
+      <div class="desk-header">
+        <span class="rec-dot"></span>
+        <span data-text="deskHeader"></span>
+        <button id="btn-close-desk" class="btn-close" type="button" aria-label="סגור">✕</button>
+      </div>
+
+      <div id="desk-stage-video" class="desk-stage">
+        <div class="video-wrap" id="desk-video-wrap">
+          <video id="desk-video" playsinline webkit-playsinline preload="metadata"></video>
+        </div>
+        <button id="btn-desk-skip" class="btn btn-ghost" type="button" data-text="skipButton"></button>
+      </div>
+
+      <div id="desk-stage-process" class="desk-stage hidden">
+        <img id="desk-team-photo" class="desk-team-photo" alt="">
+        <div class="desk-team" data-text="deskTeam"></div>
+        <div id="desk-log" class="desk-log"></div>
+        <div class="desk-progress"><div id="desk-progress-bar" class="desk-progress-bar"></div></div>
+        <div id="desk-progress-label" class="desk-progress-label"></div>
+      </div>
+
+      <div id="desk-stage-result" class="desk-stage hidden">
+        <div class="desk-profile">
+          <div id="desk-photo" class="witness-photo desk-photo"></div>
+          <div>
+            <div class="desk-result-label" data-text="deskResultLabel"></div>
+            <div id="desk-name" class="desk-name"></div>
+          </div>
+        </div>
+        <div id="desk-findings" class="terminal-body desk-findings"></div>
+
+        <!-- 1-Time Polygraph Section -->
+        <div id="desk-polygraph-section" class="polygraph-section hidden">
+          <button id="btn-run-polygraph" class="btn btn-polygraph hidden" type="button" data-text="polygraphRunButton"></button>
+          <div id="polygraph-scanning" class="polygraph-scanning hidden">
+            <div class="polygraph-wave" aria-hidden="true"></div>
+            <span data-text="polygraphScanning"></span>
+          </div>
+          <div id="polygraph-output" class="polygraph-output hidden">
+            <div class="polygraph-output-title" data-text="polygraphResultTitle"></div>
+            <div id="polygraph-output-text"></div>
+          </div>
+          <div id="polygraph-locked-note" class="polygraph-locked-note hidden"></div>
+        </div>
+
+        <button id="btn-desk-back" class="btn btn-primary hidden" type="button" data-text="deskBackButton"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Encrypted Anonymous Informant Call (TTS + Live Text) -->
+  <div id="call-overlay" class="overlay call-overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-inner call-inner">
+      <div class="overlay-header">
+        <span class="rec-dot"></span>
+        <span id="call-header-text" class="header-grow"></span>
+        <button id="btn-close-call" class="btn-close" type="button" aria-label="סגור">✕</button>
+      </div>
+
+      <!-- Stage 1: Incoming Ringing -->
+      <div id="call-stage-ring" class="call-stage">
+        <div class="caller-avatar-ring">
+          <div class="caller-silhouette">🕵️</div>
+        </div>
+        <div id="call-caller-name" class="call-caller-name"></div>
+        <div id="call-caller-sub" class="call-caller-sub"></div>
+        <button id="btn-answer-call" class="btn btn-answer-call" type="button"></button>
+      </div>
+
+      <!-- Stage 2: Connected (TTS Voice + Audio Waveform + Live Text Transcript) -->
+      <div id="call-stage-active" class="call-stage call-stage-active hidden">
+        <div class="call-top-meta">
+          <span id="call-voice-badge" class="call-voice-badge"></span>
+          <span id="call-duration" class="header-timer">00:00</span>
+        </div>
+        <div id="call-waveform" class="call-waveform" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div id="call-transcript" class="terminal-body call-transcript"></div>
+        <div class="call-actions">
+          <button id="btn-replay-tts" class="btn btn-ghost" type="button"></button>
+          <button id="btn-hangup-call" class="btn btn-danger call-hangup" type="button"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Desk Transmission & Easter Egg Modal -->
+  <div id="alert-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-inner alert-inner">
+      <div class="overlay-header alert-header">
+        <span class="rec-dot"></span>
+        <span id="alert-header-text"></span>
+        <button id="btn-close-alert" class="btn-close" type="button" aria-label="סגור">✕</button>
+      </div>
+      <div class="alert-body">
+        <div id="alert-sender" class="alert-sender"></div>
+        <div id="alert-text" class="terminal-body alert-text"></div>
+        <button id="btn-dismiss-alert" class="btn btn-primary" type="button"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Static Judge / Commander Verifier (?judge=1 or 5-tap rec dot) -->
+  <div id="judge-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-inner judge-inner">
+      <div class="overlay-header">
+        <span class="rec-dot"></span>
+        <span class="header-grow" data-text="judgeHeader"></span>
+        <button id="btn-close-judge" class="btn-close" type="button" aria-label="סגור">✕</button>
+      </div>
+      <div class="viewer-scroll judge-body">
+        <p class="panel-intro" data-text="judgeIntro"></p>
+        <textarea id="judge-input" class="field" rows="4"></textarea>
+        <button id="btn-judge-check" class="btn btn-primary" type="button" data-text="judgeCheckButton"></button>
+        <div id="judge-result" class="judge-result hidden"></div>
+
+        <hr class="judge-divider">
+        <label class="field-label" for="judge-team-name" data-text="judgeTeamLinkTitle"></label>
+        <div class="judge-link-row">
+          <input id="judge-team-name" class="field" type="text" placeholder="למשל: צוות 1">
+          <button id="btn-judge-copy-link" class="btn btn-ghost" type="button" data-text="judgeCopyLinkButton"></button>
+        </div>
+        <div id="judge-link-feedback" class="share-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/content.js"></script>
+  <script src="js/sfx.js"></script>
+  <script src="js/typewriter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

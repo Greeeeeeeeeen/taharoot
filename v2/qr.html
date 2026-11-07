@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>תיק חקירה // קודי QR לגרסאות</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050a07;
+      --panel: #0a140e;
+      --line: #1c3a26;
+      --text: #b8f5c8;
+      --accent: #39ff7a;
+      --amber: #ffb648;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 18px;
+      background: radial-gradient(ellipse at center, rgba(57, 255, 122, 0.06) 0%, transparent 70%), var(--bg);
+      color: var(--text);
+      font-family: "Heebo", system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      color: var(--accent);
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 24px;
+      width: 100%;
+      max-width: 820px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+    .card img {
+      width: 100%;
+      max-width: 340px;
+      border-radius: 10px;
+      display: block;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+    .btn {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 0.95rem;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #02140a;
+    }
+    .btn-amber {
+      border-color: var(--amber);
+      background: var(--amber);
+      color: #1a0f00;
+    }
+    @media print {
+      body { background: #fff; color: #000; }
+      .actions { display: none; }
+      .card { border: 1px solid #000; background: #fff; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>תיק חקירה — סריקת ברקוד (QR)</h1>
+  <div class="grid">
+    <div class="card">
+      <h2>הגרסה המשודרגת (V2)</h2>
+      <img src="qr-v2.png" alt="QR Code V2">
+      <div class="actions">
+        <a class="btn btn-primary" href="https://greeeeeeeeeen.github.io/taharoot/v2/" target="_blank" rel="noopener">פתיחת המשחק</a>
+        <a class="btn" href="qr-v2.png" download="taharoot-v2-qr.png">הורדת QR</a>
+      </div>
+    </div>
+    <div class="card">
+      <h2>הגרסה המקורית</h2>
+      <img src="qr-original.png" alt="QR Code Original">
+      <div class="actions">
+        <a class="btn btn-amber" href="https://greeeeeeeeeen.github.io/taharoot/" target="_blank" rel="noopener">פתיחת המקורי</a>
+        <a class="btn" href="qr-original.png" download="taharoot-original-qr.png">הורדת QR</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
