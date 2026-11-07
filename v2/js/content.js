@@ -27,8 +27,8 @@ const CONTENT = {
 
   videoSrc: "../assets/video/intro.mp4",
   videoDownloadingTitle: "מוריד קובץ וידאו מוצפן...",
-  videoDownloadingSub: "הסרטון ייפתח אוטומטית בסיום ההורדה — לצפייה חלקה ללא תקיעות",
-  videoTapToPlay: "▶ ההורדה הושלמה (100%) — לחצו להפעלה",
+  videoDownloadingSub: "הסרטון מוכן לצפייה ללא תקיעות מיד בסיום ההורדה",
+  videoTapToPlay: "▶ לחצו להפעלת הסרטון",
   preloadSyncing: "טוען מראש קבצי וידאו לצפייה חלקה... {p}%",
   preloadReady: "✓ כל קבצי הווידאו מוכנים במכשיר — צפייה ללא תקיעות",
   videoMissing: "הסרטון עדיין לא זמין",

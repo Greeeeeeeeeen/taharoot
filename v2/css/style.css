@@ -518,10 +518,15 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(88%, 340px);
-  font-size: 1rem;
-  padding: 12px 18px;
-  box-shadow: 0 0 28px rgba(57, 255, 122, 0.55);
+  width: min(86%, 300px);
+  font-size: 1.08rem;
+  padding: 12px 20px;
+  background: rgba(5, 14, 9, 0.88);
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 0 28px rgba(57, 255, 122, 0.45), inset 0 0 14px rgba(57, 255, 122, 0.15);
 }
 
 .video-tap-play:active {
@@ -2340,6 +2345,10 @@ select.field {
 }
 
 /* Alert / Incoming Desk Transmission & Easter Egg */
+#alert-overlay {
+  z-index: 58;
+}
+
 .alert-inner {
   max-width: 520px;
   border-color: var(--amber);

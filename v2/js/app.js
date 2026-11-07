@@ -331,20 +331,41 @@
     const metaEl = cfg.metaEl;
     const tapBtn = cfg.tapBtn;
     const errorEl = cfg.errorEl;
-    const showControls = cfg.showControls !== false;
 
     let runToken = 0;
     let unsubscribe = null;
+    let activeCallbacks = null;
+    let notifiedPlay = false;
+
+    if (videoEl) {
+      videoEl.addEventListener("loadedmetadata", () => {
+        if (videoEl.paused && videoEl.currentTime === 0) {
+          try {
+            videoEl.currentTime = 0.001;
+          } catch (e) {}
+        }
+      });
+
+      videoEl.addEventListener("play", () => {
+        if (tapBtn) tapBtn.classList.add("hidden");
+        if (!notifiedPlay) {
+          notifiedPlay = true;
+          if (activeCallbacks && activeCallbacks.onPlay) activeCallbacks.onPlay();
+        }
+      });
+    }
 
     if (tapBtn && videoEl) {
       tapBtn.addEventListener("click", () => {
         tapBtn.classList.add("hidden");
-        videoEl.controls = showControls;
+        videoEl.controls = true;
+        if (videoEl.currentTime < 0.05) {
+          try {
+            videoEl.currentTime = 0;
+          } catch (e) {}
+        }
         const p = videoEl.play();
         if (p && p.catch) p.catch(() => {});
-      });
-      videoEl.addEventListener("play", () => {
-        tapBtn.classList.add("hidden");
       });
     }
 
@@ -359,18 +380,11 @@
       if (token !== runToken) return;
       if (loaderEl) loaderEl.classList.add("hidden");
       if (errorEl) errorEl.classList.add("hidden");
-      if (tapBtn) tapBtn.classList.add("hidden");
 
+      // Never autoplay: mount 100%-downloaded blob URL and wait for explicit user play!
       videoEl.src = entry.blobUrl;
-      videoEl.controls = showControls;
-      const attempt = videoEl.play();
-      if (attempt && attempt.catch) {
-        attempt.catch(() => {
-          if (token !== runToken || videoEl.error) return;
-          videoEl.controls = true;
-          if (tapBtn) tapBtn.classList.remove("hidden");
-        });
-      }
+      videoEl.controls = true;
+      if (tapBtn) tapBtn.classList.remove("hidden");
       if (callbacks && callbacks.onReady) callbacks.onReady();
     }
 
@@ -389,6 +403,8 @@
         runToken++;
         const token = runToken;
         detach();
+        activeCallbacks = callbacks || null;
+        notifiedPlay = false;
 
         if (errorEl) errorEl.classList.add("hidden");
         if (tapBtn) tapBtn.classList.add("hidden");
@@ -434,6 +450,8 @@
       stop: function () {
         runToken++;
         detach();
+        activeCallbacks = null;
+        notifiedPlay = false;
         if (loaderEl) loaderEl.classList.add("hidden");
         if (tapBtn) tapBtn.classList.add("hidden");
         videoEl.pause();
@@ -701,10 +719,14 @@
     clearTimeout(skipTimer);
 
     // Fallback skip button in case reception is completely offline, while video stays gated until 100%
-    skipTimer = setTimeout(() => reveal($("btn-skip")), 4500);
+    skipTimer = setTimeout(() => reveal($("btn-skip")), 6000);
 
     introPlayer.open(CONTENT.videoSrc, {
       onReady: () => {
+        clearTimeout(skipTimer);
+        skipTimer = setTimeout(() => reveal($("btn-skip")), 6000);
+      },
+      onPlay: () => {
         clearTimeout(skipTimer);
         skipTimer = setTimeout(() => reveal($("btn-skip")), SKIP_DELAY_MS);
       },
@@ -783,7 +805,16 @@
     syncAppWidth();
   });
 
-  let pendingTransmission = false;
+  let pendingTransmission = Boolean(progress.pendingTransmission);
+
+  function triggerPendingTransmission() {
+    if (!pendingTransmission && !progress.pendingTransmission) return;
+    pendingTransmission = false;
+    progress.pendingTransmission = false;
+    progress.seenTransmission = true;
+    saveProgress();
+    showDeskTransmission();
+  }
 
   function showTab(name) {
     currentTab = name;
@@ -792,10 +823,6 @@
     if (name === "evidence") $("evidence-badge").classList.add("hidden");
     if (window.SFX) SFX.click();
     syncAppWidth();
-    if (pendingTransmission && $("viewer").classList.contains("hidden")) {
-      pendingTransmission = false;
-      showDeskTransmission();
-    }
   }
 
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -814,6 +841,11 @@
 
   let alertTyper = null;
   function openAlertModal(opts) {
+    document.querySelectorAll("video").forEach((v) => {
+      try {
+        v.pause();
+      } catch (e) {}
+    });
     const overlay = $("alert-overlay");
     const inner = overlay.querySelector(".alert-inner");
     inner.classList.toggle("danger-alert", Boolean(opts.danger));
@@ -1275,12 +1307,21 @@
     if (e.target === callOverlay) closeInformantCall();
   });
 
+  let activeViewerItem = null;
+  let transmissionEndTimer = null;
+
+  function isEvidence2Item(item) {
+    return Boolean(item && CONTENT.questionSets[1] && item === CONTENT.questionSets[1].evidence);
+  }
+
   function openViewer(item) {
     if (item && item.call) {
       openInformantCall(item.call);
       return;
     }
 
+    clearTimeout(transmissionEndTimer);
+    activeViewerItem = item || null;
     $("viewer-title").textContent = item.title;
     $("viewer-error").classList.add("hidden");
     $("viewer-video-wrap").classList.remove("is-portrait");
@@ -1321,17 +1362,26 @@
   }
 
   function closeViewer() {
+    clearTimeout(transmissionEndTimer);
+    const closedItem = activeViewerItem;
+    activeViewerItem = null;
     viewerPlayer.stop();
     $("viewer-image").removeAttribute("src");
     activeViewerWitness = null;
     activeUvScene = null;
     viewer.classList.add("hidden");
 
-    if (pendingTransmission) {
-      pendingTransmission = false;
-      setTimeout(showDeskTransmission, 220);
+    if ((pendingTransmission || progress.pendingTransmission) && isEvidence2Item(closedItem)) {
+      setTimeout(triggerPendingTransmission, 240);
     }
   }
+
+  viewerVideo.addEventListener("ended", () => {
+    if ((pendingTransmission || progress.pendingTransmission) && isEvidence2Item(activeViewerItem)) {
+      clearTimeout(transmissionEndTimer);
+      transmissionEndTimer = setTimeout(triggerPendingTransmission, 650);
+    }
+  });
 
   viewerVideo.addEventListener("error", () => {
     if (viewerVideo.getAttribute("src")) $("viewer-error").classList.remove("hidden");
@@ -1492,9 +1542,9 @@
     $("evidence-badge").classList.remove("hidden");
     flashDecryptedToast(CONTENT.questionSets[idx].evidence.title);
     if (idx === 1 && !progress.seenTransmission) {
-      progress.seenTransmission = true;
-      saveProgress();
       pendingTransmission = true;
+      progress.pendingTransmission = true;
+      saveProgress();
     }
   }
 
@@ -2560,10 +2610,14 @@
     $("final-video-error").classList.add("hidden");
     $("btn-final-video-skip").classList.add("hidden");
     clearTimeout(finalSkipTimer);
-    finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), 4500);
+    finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), 6000);
 
     finalPlayer.open(CONTENT.finalVideo, {
       onReady: () => {
+        clearTimeout(finalSkipTimer);
+        finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), 6000);
+      },
+      onPlay: () => {
         clearTimeout(finalSkipTimer);
         finalSkipTimer = setTimeout(() => reveal($("btn-final-video-skip")), SKIP_DELAY_MS);
       },
